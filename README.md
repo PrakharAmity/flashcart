@@ -111,4 +111,3 @@ Verified Payment Confirmation: The payment confirmation screen verifies transact
 Warehouse Inventory Allocation: Order fulfillment allocates stock only from warehouses with available unreserved inventory, falling back to secondary hubs when top-priority hubs are exhausted.
 
 All existing e-commerce functionality must continue working as expected.
-```
