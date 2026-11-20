@@ -1,0 +1,29 @@
+{
+  "name": "flashcart",
+  "version": "1.0.0",
+  "description": "FlashCart - Production-Grade High-Traffic E-Commerce & Marketplace Application (DEBUG//LAB DL-APP-001)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node tests/runner.js",
+    "test:reference": "node --env-file=.env.reference tests/runner.js || set REFERENCE_MODE=true && node tests/runner.js",
+    "test:challenge": "set REFERENCE_MODE=false && node tests/runner.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "keywords": [
+    "ecommerce",
+    "marketplace",
+    "flash-sale",
+    "inventory",
+    "dsa",
+    "debuglab"
+  ],
+  "author": "DEBUG//LAB",
+  "license": "ISC"
+}

@@ -1,0 +1,33 @@
+{
+  "bug_id": "DL-BUG-003",
+  "application_id": "DL-APP-001",
+  "title": "Concurrent Inventory Overselling",
+  "category": "Backend + Database",
+  "difficulty": "Hard",
+  "business_scenario": "A flash sale item has exactly 1 unit left in stock. Multiple customers hit checkout concurrently.",
+  "symptoms": "Both checkouts succeed, inventory drops below zero or multiple orders are fulfilled for a single physical unit.",
+  "reproduction_steps": [
+    "Set product stock to 1.",
+    "Send two concurrent requests to reserveStock for quantity 1.",
+    "Inspect final product stock and reservation success flags."
+  ],
+  "expected_behavior": "Only one reservation must succeed. The other must fail with an out-of-stock error. Final stock must be 0, never negative.",
+  "actual_behavior": "Both callers read stock = 1 before either decrements, resulting in both passing the availability check.",
+  "root_cause": "Non-atomic read-then-write pattern in inventory.service.js without a critical section lock or transactional mutex.",
+  "affected_modules": ["InventoryModule", "CheckoutModule"],
+  "affected_files": [
+    "src/services/inventory.service.js"
+  ],
+  "hidden_test_cases": [
+    "test_concurrent_inventory_single_stock_reservation",
+    "test_stock_never_drops_below_zero"
+  ],
+  "acceptance_criteria": "When stock is 1 and N concurrent reservations occur, exactly 1 succeeds and N-1 fail with Out of stock.",
+  "reference_fix": "Wrap stock availability check and decrement in an atomic critical section mutex in inventory.service.js.",
+  "regression_tests": [
+    "Sequential reservation decrements stock accurately.",
+    "Release stock replenishes inventory count."
+  ],
+  "injection_status": "INJECTED",
+  "validation_status": "VERIFIED"
+}

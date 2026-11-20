@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  flashcart-app:
+    build: .
+    container_name: flashcart-debuglab
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - NODE_ENV=development
+      - REFERENCE_MODE=false
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    command: npm start

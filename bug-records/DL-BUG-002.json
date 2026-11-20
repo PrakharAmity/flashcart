@@ -1,0 +1,33 @@
+{
+  "bug_id": "DL-BUG-002",
+  "application_id": "DL-APP-001",
+  "title": "Stale Product Search Responses",
+  "category": "Frontend + Backend",
+  "difficulty": "Medium",
+  "business_scenario": "Customer searches for 'Laptop' and then quickly clears or updates the query to 'Mobile'.",
+  "symptoms": "Search results for older query 'Laptop' arrive later and overwrite the newer search results for 'Mobile'.",
+  "reproduction_steps": [
+    "Trigger search for 'laptop' which has an artificial backend latency of 150ms.",
+    "Quickly trigger search for 'mobile' which responds in 10ms.",
+    "Observe UI rendering: 'mobile' results appear, and are then overwritten by stale 'laptop' results."
+  ],
+  "expected_behavior": "Only the latest user query determines visible results; older responses must be discarded or aborted.",
+  "actual_behavior": "Older out-of-order responses overwrite newer search results in public/app.js due to lack of request sequence checks.",
+  "root_cause": "The search client does not check sequence IDs or abort previous in-flight requests, causing race conditions when query latency varies.",
+  "affected_modules": ["SearchModule", "ProductsModule"],
+  "affected_files": [
+    "src/routes/search.routes.js",
+    "public/app.js"
+  ],
+  "hidden_test_cases": [
+    "test_stale_search_response_discarded",
+    "test_latest_search_query_wins"
+  ],
+  "acceptance_criteria": "Responses with requestId lower than the latest issued query must be ignored.",
+  "reference_fix": "Maintain a sequence counter in the search client / service and discard any response where data.requestId < state.lastSearchRequestId, or use AbortController.",
+  "regression_tests": [
+    "Normal single search returns correct matching items."
+  ],
+  "injection_status": "INJECTED",
+  "validation_status": "VERIFIED"
+}

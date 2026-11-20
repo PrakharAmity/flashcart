@@ -1,0 +1,91 @@
+{
+  "challenge_id": "express-challenge",
+  "application_id": "DL-APP-001",
+  "application_name": "FlashCart",
+  "runtime_config": {
+    "runtime_type": "node-express",
+    "install_command": "npm install",
+    "start_command": "node --watch server.js",
+    "test_command": "npm test",
+    "ports": [
+      {
+        "container_port": 3000,
+        "type": "preview"
+      }
+    ]
+  },
+  "overview": "FlashCart is a high-traffic production e-commerce marketplace preparing for its Mega Shopping Festival. Thousands of customers concurrently browse, search, reserve items, and checkout flash sale products. Eight production incidents have surfaced that must be diagnosed and resolved.",
+  "demo_credentials": {
+    "customer": { "email": "customer@flashcart.demo", "password": "FlashCart@123" },
+    "seller": { "email": "seller@flashcart.demo", "password": "FlashCart@123" },
+    "admin": { "email": "admin@flashcart.demo", "password": "FlashCart@123" }
+  },
+  "bug_topics": [
+    "Duplicate Checkout Requests and Idempotency",
+    "Stale Search Responses and Request Sequencing",
+    "Concurrent Inventory Overselling and Atomic Locks",
+    "Duplicate Payment Transactions and Settlement State",
+    "Binary Max-Heap Product Ranking and Priority Queue",
+    "Combined Filtering and Offset Pagination",
+    "Payment Gateway Verification and State Confirmation",
+    "Multi-Warehouse Inventory Allocation and Reservations"
+  ],
+  "incidents": [
+    {
+      "id": "DL-BUG-001",
+      "title": "Duplicate Checkout Requests",
+      "difficulty": "Medium",
+      "symptoms": "Rapid successive clicks or slow network submissions result in multiple order records and double charges for the same checkout attempt.",
+      "expected": "Only one order should be created per checkout attempt."
+    },
+    {
+      "id": "DL-BUG-002",
+      "title": "Stale Product Search Responses",
+      "difficulty": "Medium",
+      "symptoms": "When quickly typing or modifying search queries, older responses can arrive after newer ones and overwrite the visible product results.",
+      "expected": "Only the results from the most recent search query should be displayed."
+    },
+    {
+      "id": "DL-BUG-003",
+      "title": "Concurrent Inventory Overselling",
+      "difficulty": "Hard",
+      "symptoms": "When a limited quantity item is purchased concurrently, multiple checkouts succeed and stock falls into invalid counts.",
+      "expected": "Stock reservations must be atomic and prevent overselling beyond actual availability."
+    },
+    {
+      "id": "DL-BUG-004",
+      "title": "Duplicate Payment Transactions",
+      "difficulty": "Hard",
+      "symptoms": "Retrying payment on timeout or re-submitting payment creates multiple successful payment transactions on the same order.",
+      "expected": "Payment transactions must be idempotent and prevent multiple successful settlements for an order."
+    },
+    {
+      "id": "DL-BUG-005",
+      "title": "Incorrect Product Ranking Heap",
+      "difficulty": "Hard",
+      "symptoms": "Trending products on the storefront do not appear in the intended order, especially when products have equal or close popularity scores.",
+      "expected": "Products must strictly follow the priority queue ranking criteria with deterministic tie-breaking."
+    },
+    {
+      "id": "DL-BUG-006",
+      "title": "Incorrect Combined Filters and Pagination",
+      "difficulty": "Medium",
+      "symptoms": "Applying multiple category, brand, and price filters leads to missing items across paginated pages.",
+      "expected": "Pagination must accurately navigate across the entire filtered dataset without omissions."
+    },
+    {
+      "id": "DL-BUG-007",
+      "title": "False Payment Success Screen",
+      "difficulty": "Medium",
+      "symptoms": "Navigating to the payment callback URL displays a confirmation screen even if the backend payment was not settled.",
+      "expected": "Success screens must only be shown after verifying payment status with the backend API."
+    },
+    {
+      "id": "DL-BUG-008",
+      "title": "Incorrect Warehouse Inventory Allocation",
+      "difficulty": "Hard",
+      "symptoms": "Orders allocating items across multiple regional warehouses fail or allocate from warehouses whose inventory is already reserved.",
+      "expected": "Fulfillment must allocate from warehouses respecting priority order and subtracting existing reservations."
+    }
+  ]
+}
