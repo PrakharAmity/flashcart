@@ -111,39 +111,4 @@ Verified Payment Confirmation: The payment confirmation screen verifies transact
 Warehouse Inventory Allocation: Order fulfillment allocates stock only from warehouses with available unreserved inventory, falling back to secondary hubs when top-priority hubs are exhausted.
 
 All existing e-commerce functionality must continue working as expected.
-
-## 4. Running the Application & Automated Verification
-
-Start the Application:
-```bash
-npm start
-# or development watch mode
-npm run dev
-```
-
-Run Automated Tests:
-```bash
-# Challenge Mode (Reproduces all 8 bugs)
-npm test
-
-# Reference Mode (Verifies all 8 fixes)
-npm run test:reference
-```
-
-Strict JSON Output Format:
-```json
-{
-  "test_dl_bug_001_duplicate_checkout_requests": { "Status": "passed", "Execution time": "4ms" },
-  "test_dl_bug_002_stale_search_responses": { "Status": "passed", "Execution time": "3ms" },
-  "test_dl_bug_003_concurrent_inventory_overselling": { "Status": "passed", "Execution time": "1ms" },
-  "test_dl_bug_004_duplicate_payment_transactions": { "Status": "passed", "Execution time": "4ms" },
-  "test_dl_bug_005_product_ranking_heap": { "Status": "passed", "Execution time": "44ms" },
-  "test_dl_bug_006_combined_filters_and_pagination": { "Status": "passed", "Execution time": "3ms" },
-  "test_dl_bug_007_false_payment_success_screen": { "Status": "passed", "Execution time": "1ms" },
-  "test_dl_bug_008_warehouse_inventory_allocation": { "Status": "passed", "Execution time": "2ms" },
-  "Passed": 8,
-  "Failed": 0,
-  "Total bugs": 8,
-  "Total Execution time": "63ms"
-}
 ```
