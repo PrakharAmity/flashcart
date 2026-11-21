@@ -3,7 +3,6 @@ import { paymentsService } from '../services/payments.service.js';
 
 export const paymentsRouter = express.Router();
 
-// Process simulated payment
 paymentsRouter.post('/process', async (req, res) => {
   try {
     const { orderId, method, simulatedOutcome } = req.body;
@@ -19,9 +18,8 @@ paymentsRouter.post('/process', async (req, res) => {
   }
 });
 
-// Verification endpoint for DL-BUG-007
 paymentsRouter.get('/verify/:orderId', (req, res) => {
-  const result = paymentsService.verifyPayment(req.params.orderId);
+  const result = paymentsService.verifyPayment(req.params.orderId, req.query.status || req.query.redirectStatus);
   res.json(result);
 });
 

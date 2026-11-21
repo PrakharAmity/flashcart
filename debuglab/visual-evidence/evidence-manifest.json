@@ -1,0 +1,156 @@
+{
+  "challengeId": "express-challenge",
+  "applicationId": "DL-APP-001",
+  "application": "FlashCart",
+  "generatedAt": "2026-11-21T09:52:38.325Z",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "captures": [
+    {
+      "bugId": "DL-BUG-001",
+      "perspective": "Customer",
+      "stage": "Two orders from one double-click checkout",
+      "path": "DL-BUG-001/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 297536
+    },
+    {
+      "bugId": "DL-BUG-002",
+      "perspective": "Customer",
+      "stage": "The latest mobile search response appears first",
+      "path": "DL-BUG-002/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 593037
+    },
+    {
+      "bugId": "DL-BUG-002",
+      "perspective": "Customer",
+      "stage": "The older laptop response replaces mobile results",
+      "path": "DL-BUG-002/screenshot-02.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 599612
+    },
+    {
+      "bugId": "DL-BUG-003",
+      "perspective": "Customer A",
+      "stage": "Checkout with the last Nikon Z8",
+      "path": "DL-BUG-003/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 335026
+    },
+    {
+      "bugId": "DL-BUG-003",
+      "perspective": "Customer B",
+      "stage": "Independent customer checks out the same last Nikon Z8",
+      "path": "DL-BUG-003/screenshot-02.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 335357
+    },
+    {
+      "bugId": "DL-BUG-003",
+      "perspective": "Customer A",
+      "stage": "Checkout and simulated payment succeed",
+      "path": "DL-BUG-003/screenshot-03.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 324619
+    },
+    {
+      "bugId": "DL-BUG-003",
+      "perspective": "Customer B",
+      "stage": "Concurrent checkout also succeeds",
+      "path": "DL-BUG-003/screenshot-04.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 327106
+    },
+    {
+      "bugId": "DL-BUG-003",
+      "perspective": "Storefront",
+      "stage": "Catalog shows the oversold item backordered by one unit",
+      "path": "DL-BUG-003/screenshot-05.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 404105
+    },
+    {
+      "bugId": "DL-BUG-004",
+      "perspective": "Customer",
+      "stage": "First simulated payment settles",
+      "path": "DL-BUG-004/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 351305
+    },
+    {
+      "bugId": "DL-BUG-004",
+      "perspective": "Administrator",
+      "stage": "Audit log shows two successful transaction IDs for one order",
+      "path": "DL-BUG-004/screenshot-02.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 271313
+    },
+    {
+      "bugId": "DL-BUG-005",
+      "perspective": "Storefront",
+      "stage": "Trending products appear in the wrong priority order",
+      "path": "DL-BUG-005/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 613993
+    },
+    {
+      "bugId": "DL-BUG-006",
+      "perspective": "Customer",
+      "stage": "Filtered Sony Audio products appear on the first page",
+      "path": "DL-BUG-006/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 412799
+    },
+    {
+      "bugId": "DL-BUG-006",
+      "perspective": "Customer",
+      "stage": "Filtered matches disappear on a later page",
+      "path": "DL-BUG-006/screenshot-02.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 423883
+    },
+    {
+      "bugId": "DL-BUG-007",
+      "perspective": "Customer",
+      "stage": "Gateway screen reports success after a failed simulated payment",
+      "path": "DL-BUG-007/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 354059
+    },
+    {
+      "bugId": "DL-BUG-007",
+      "perspective": "Customer",
+      "stage": "Order history still shows payment pending",
+      "path": "DL-BUG-007/screenshot-02.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 279582
+    },
+    {
+      "bugId": "DL-BUG-008",
+      "perspective": "Administrator",
+      "stage": "Warehouse dashboard shows allocation against fully reserved primary stock",
+      "path": "DL-BUG-008/screenshot-01.png",
+      "width": 1440,
+      "height": 900,
+      "bytes": 324726
+    }
+  ]
+}

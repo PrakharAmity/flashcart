@@ -8,7 +8,6 @@ searchRouter.get('/', async (req, res) => {
   const q = (req.query.q || '').trim();
   const requestId = req.query.requestId || Date.now().toString();
 
-  // If query is empty
   if (!q) {
     return res.json({
       query: '',
@@ -18,8 +17,6 @@ searchRouter.get('/', async (req, res) => {
     });
   }
 
-  // Artificial latency simulation to reproduce race condition when "laptop" is queried before "mobile"
-  // In Challenge Mode, "laptop" has a 3500ms (3.5s) delay so anyone can comfortably test it in the UI
   if (!config.isReferenceMode && q.toLowerCase() === 'laptop') {
     await new Promise((resolve) => setTimeout(resolve, 3500));
   }

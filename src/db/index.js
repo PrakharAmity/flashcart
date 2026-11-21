@@ -175,6 +175,26 @@ class FlashCartDatabase {
         createdAt: order.createdAt
       });
 
+      this.auditLogs.push({
+        id: `audit-seed-ord-${orderId}`,
+        timestamp: order.createdAt,
+        action: 'ORDER_PLACED',
+        userId: order.userId,
+        role: 'CUSTOMER',
+        details: { orderId: order.id, orderNumber: order.orderNumber, total: order.total }
+      });
+
+      if (paymentStatus === 'SUCCESS') {
+        this.auditLogs.push({
+          id: `audit-seed-pay-${orderId}`,
+          timestamp: payment.createdAt,
+          action: 'PAYMENT_SUCCESS',
+          userId: order.userId,
+          role: 'CUSTOMER',
+          details: { orderId: order.id, transactionId: payment.transactionId, amount: total, method: order.paymentMethod }
+        });
+      }
+
       // Sample refund for 1 order
       if (i === 4) {
         this.refunds.push({

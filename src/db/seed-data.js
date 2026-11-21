@@ -370,7 +370,7 @@ export const seedProducts = [
     sellerId: 'seller-3',
     stock: 20,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/hp-spectre-x360.jpg', 'https://images.unsplash.com/photo-1589561084283-930aa7b1ce50?w=800&auto=format&fit=crop&q=80'],
     specs: { cpu: 'Intel Core Ultra 7', ram: '16GB LPDDR5X', ssd: '1TB NVMe', display: '14" 2.8K OLED Touch' }
   },
   {
@@ -682,7 +682,7 @@ export const seedProducts = [
     sellerId: 'seller-10',
     stock: 16,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/oura-ring-4.jpg'],
     specs: { material: 'Titanium PVD Coating', battery: '8 Days', waterResistance: '100m', sensors: '18 Biometric Pathways' }
   },
   {
@@ -898,7 +898,7 @@ export const seedProducts = [
     sellerId: 'seller-6',
     stock: 35,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/nintendo-switch-zelda.jpg'],
     specs: { screen: '7.0" OLED 720p Handheld / 1080p TV', storage: '64GB Internal + MicroSD slot' }
   },
   {
@@ -917,7 +917,7 @@ export const seedProducts = [
     sellerId: 'seller-6',
     stock: 15,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1612287232252-87f54c30e208?w=800&auto=format&fit=crop&q=80'],
+    images: ['https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&auto=format&fit=crop&q=80'],
     specs: { screen: '7.4" 90Hz HDR OLED 1000 nits', apu: '6nm AMD Zen 2 + RDNA 2', battery: '50Wh (3-12 Hours)' }
   },
   {
@@ -1015,7 +1015,7 @@ export const seedProducts = [
     sellerId: 'seller-8',
     stock: 14,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/breville-barista-touch.jpg', 'https://images.unsplash.com/photo-1565879381467-a5db3d97b757?w=800&auto=format&fit=crop&q=80'],
     specs: { heating: 'ThermoJet 3-Sec', pressure: '15 Bar Italian Pump', grinder: 'Precision Conical Burrs' }
   },
   {
@@ -1034,7 +1034,7 @@ export const seedProducts = [
     sellerId: 'seller-8',
     stock: 45,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1550524514-998845778b40?w=800&auto=format&fit=crop&q=80'],
+    images: ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&auto=format&fit=crop&q=80'],
     specs: { output: '1100 Lumens per bulb', connectivity: 'Zigbee + Bluetooth', ecosystems: 'Apple HomeKit, Google Home, Alexa' }
   },
   {
@@ -1053,7 +1053,7 @@ export const seedProducts = [
     sellerId: 'seller-8',
     stock: 10,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1580481077195-c3a821a58875?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/herman-miller-aeron.jpg'],
     specs: { warranty: '12 Years Official', material: 'Breathable 8Z Pellicle Mesh', adjustment: 'PostureFit SL Dual Pads' }
   },
   {
@@ -1072,7 +1072,7 @@ export const seedProducts = [
     sellerId: 'seller-8',
     stock: 18,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/roomba-combo-j9.jpg'],
     specs: { docking: 'Clean Base Auto-Empty & Auto-Refill', mopping: 'SmartScrub 2x Deep Mop' }
   },
   {
@@ -1091,7 +1091,7 @@ export const seedProducts = [
     sellerId: 'seller-8',
     stock: 20,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/lg-puricare-360.jpg'],
     specs: { coverage: '100 sq. meters', filter: 'Safe Plus 6-Step Multi-Filter', smart: 'LG ThinQ Wi-Fi' }
   },
 
@@ -1191,7 +1191,7 @@ export const seedProducts = [
     sellerId: 'seller-7',
     stock: 60,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1542272604-780c96856592?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/levis-501-jeans.jpg', 'https://images.unsplash.com/photo-1624378441864-6eda7eac51cb?w=800&auto=format&fit=crop&q=80'],
     specs: { material: '100% Selvedge Cotton', fly: 'Signature Button Fly', fit: 'Regular Through Thigh, Straight Leg' }
   },
   {
@@ -1210,7 +1210,7 @@ export const seedProducts = [
     sellerId: 'seller-7',
     stock: 52,
     isFlashSale: false,
-    images: ['https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800&auto=format&fit=crop&q=80'],
+    images: ['/images/adidas-ultraboost.jpg', 'https://images.unsplash.com/photo-1559743345-60e0907c4853?w=800&auto=format&fit=crop&q=80'],
     specs: { midsole: 'Light BOOST 30% Lighter', upper: 'Primeknit+ Textile', outsole: 'Continental Better Rubber' }
   }
 ];

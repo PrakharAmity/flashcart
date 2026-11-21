@@ -1,115 +1,249 @@
 # FlashCart — Production E-Commerce Application
 
-## 1. Your Mission: Investigate & Fix the Bugs
+Welcome to **FlashCart**! FlashCart is a high-traffic, production-grade online shopping platform built with Node.js and Express. It handles real-world e-commerce workflows like instant product search, flash sales, shopping carts, simulated UPI and card payments, regional multi-warehouse inventory fulfillment, and admin monitoring dashboards.
 
-You are a Full-Stack Developer working on FlashCart, a high-traffic production e-commerce marketplace designed to handle high-volume flash-sale events, concurrent orders, multi-warehouse fulfillment, and simulated payment processing. The QA team has identified eight critical issues affecting everyday marketplace operations.
+---
 
-Your responsibility is to investigate the existing codebase, reproduce each issue, identify its root cause, and implement reliable fixes without disrupting existing functionality.
+## Quick Navigation Links
 
-### BUG-01: Duplicate Checkout Requests
-Problem: Clicking the "Place Order" button in rapid succession or double-clicking creates multiple separate orders for a single cart checkout instead of an idempotent single order.
+- 📖 **Complete Technical Solutions & Line-by-Line Code Fixes:** [solutions.md](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/solutions.md)
+- 📊 **Visual Evidence Execution Summary Report:** [execution-report.md](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/execution-report.md)
+- 🗂️ **Visual Evidence Manifest (JSON):** [evidence-manifest.json](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/evidence-manifest.json)
 
-How to identify it: Open the shopping cart with items, navigate to Checkout, and click the "Place Order" button multiple times rapidly. Observe that two or more distinct orders with different order IDs appear in the order history for the same checkout intent.
+---
 
-Your task: Ensure checkout requests are idempotent, debounced on the client, and validated on the backend so that only one order is created per checkout attempt.
+## Detailed Breakdown of the 8 Production Bugs & Visual Screenshots
 
-### BUG-02: Stale Product Search Responses
-Problem: Searching for products quickly causes slower in-flight responses from earlier queries to overwrite newer search results.
+Below is a detailed guide to each of the 8 production bugs. Every bug explanation includes what happens, why it harms the business and customers, how to fix it, and direct links to our annotated screenshots with **red visual demonstration cards** and **high-visibility glowing badges**.
 
-How to identify it: Open the search bar and type a query (e.g., "laptop"), then immediately clear it and type a different query (e.g., "phone"). Observe that results for "laptop" overwrite the results for "phone" once the slower request completes.
+---
 
-Your task: Ensure that asynchronous search responses are tracked by sequence or canceled so that only the latest query's results are displayed.
+### Bug 1: Duplicate Checkout Requests (The Double-Click Order Glitch)
 
-### BUG-03: Concurrent Inventory Overselling
-Problem: When multiple customers simultaneously purchase the last remaining stock of a flash-sale item, the backend inventory check and stock decrement occur without atomic concurrency locks, allowing stock levels to drop below zero.
+#### 1. What happens in the app?
+When a customer is checking out on a slow connection or double-clicks the "Place Order & Pay" button, their browser sends two checkout requests to `/api/checkout/place-order` at almost the exact same millisecond. 
+Instead of recognizing that both requests belong to the same purchase, the server processes both requests simultaneously. It creates two completely separate order numbers (`FC-2026-60229` and `FC-2026-77952`), charges the customer's payment method twice, and deducts the inventory stock twice!
 
-How to identify it: Send concurrent checkout requests for a product with only 1 unit remaining. Observe that both checkouts succeed, resulting in a negative inventory balance (e.g., -1 stock).
+#### 2. Why is this a serious problem?
+- **Customer Frustration:** Customers see duplicate bank transactions and two orders on their account for identical items.
+- **Stock Depletion:** Flash-sale stock gets incorrectly deducted twice, causing items to prematurely show as out of stock.
 
-Your task: Use atomic reservation locks or transaction isolation during stock verification and decrement so stock can never be oversold or drop below zero.
+#### 3. How to fix it:
+In [src/services/checkout.service.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/services/checkout.service.js), we add two protections:
+1. **Per-User Concurrency Lock:** When a user starts checkout, add their `userId` to an active lock set. If a second request comes in before the first completes, reject it with HTTP `409 Conflict`.
+2. **Idempotency Key Cache:** Save completed order records in a map keyed by the client's `idempotencyKey`. If a duplicate request arrives later, return the already-created order without charging again.
 
-image
+#### 4. Visual Evidence & Screenshots:
+- [View DL-BUG-001 Annotated Screenshot](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-001/screenshot-01.png)
+  - **Floating Card (Top Right):** Displays `BUG 1 VISUAL DEMONSTRATION` with the description *"Rapidly clicking or double-clicking 'Place Order' bypasses idempotency guards and creates multiple distinct orders and charges for a single checkout attempt."*
+  - **Highlighted UI Elements:** The customer's order history shows two red dashed boxes around the two identical orders:
+    - `⚠️ Duplicate Order #1 (FC-2026-77952) - Placed via double-click`
+    - `⚠️ Duplicate Order #2 (FC-2026-60229) - Identical items charged twice!`
 
-### BUG-04: Duplicate Payment Transactions
-Problem: When a customer's payment request encounters network delay and they retry the transaction, the payment gateway processes a second charge and records duplicate successful payments for an order that has already been paid.
+---
 
-How to identify it: Initiate a payment for an order, simulate a retry or submit a second payment request with the same order ID after the first succeeds. Notice that two payment records are created and both mark the order as charged twice.
+### Bug 2: Stale Product Search Responses Overwrite Active Query
 
-Your task: Implement payment idempotency checks and verify that orders in a terminal "PAID" state reject duplicate payment attempts.
+#### 1. What happens in the app?
+When searching for products, the user types a query (e.g., "laptop"), changes their mind, clears it, and quickly types another query (e.g., "mobile"). 
+Because network queries have different response speeds (or the backend query for "laptop" takes longer), the faster "mobile" search returns first and displays phones. A few seconds later, the delayed "laptop" search finishes and overwrites the dropdown list with laptops, even though the search input still clearly says "mobile"!
 
-### BUG-05: Incorrect Product Ranking Heap
-Problem: The binary heap algorithm used for ranking trending products and flash-sale items inverts priority comparison or truncates sales scores, resulting in lower-scoring products being ranked above top-tier items.
+#### 2. Why is this a serious problem?
+- **Misleading UI:** Customers see laptops while typing "mobile", confusing them and breaking product discovery.
+- **Lost Sales:** Customers think the store has no phones or that the search bar is broken.
 
-How to identify it: View the "Deals of the Day" or trending items section. Inspect the sales score and rating calculation. Notice that products with lower composite scores appear ranked higher than products with superior sales performance.
+#### 3. How to fix it:
+In [public/app.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/public/app.js) and [src/routes/search.routes.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/routes/search.routes.js):
+1. **Sequence Numbering:** Add a `requestId` number to every search request that counts up (`1, 2, 3...`).
+2. **Discard Stale Results:** If a response arrives with a `requestId` smaller than `state.lastSearchRequestId`, throw it away immediately.
+3. **Request Cancellation:** Use JavaScript's `AbortController` to cancel in-flight network searches when new characters are typed.
 
-Your task: Correct the heap comparator and percolate logic to ensure high-priority products with the highest composite sales scores correctly occupy the top positions of the max-heap.
+#### 4. Visual Evidence & Screenshots:
+- [View DL-BUG-002 Step 1 Screenshot](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-002/screenshot-01.png):
+  - Shows the initial state: query is "mobile", and the fast search response correctly renders mobile phones. Tagged with blue `🔍 Active Query Input: "mobile"` and green `✅ Mobile search response displayed`.
+- [View DL-BUG-002 Step 2 Screenshot](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-002/screenshot-02.png):
+  - Shows the bug occurring: the delayed "laptop" search finishes and overwrites the dropdown with MacBooks, while the input bar still reads "mobile". Tagged with amber `⚠️ Active Search Input Remains: "mobile"` and red `🚨 BUG: Stale "laptop" results overwrote the active search dropdown!`.
 
-### BUG-06: Incorrect Combined Filters and Pagination
-Problem: When applying multi-faceted filters (e.g., category "Laptops" + price range + brand) together with pagination, matching products disappear across pages or return 0 items because pagination offset slicing is applied before filtering the dataset.
+---
 
-How to identify it: Navigate to the Shop page, select Category "Laptops", set a price filter, and navigate between Page 1 and Page 2. Observe that matching products disappear or page 2 returns empty even though matching products exist in the catalog.
+### Bug 3: Concurrent Inventory Overselling During Flash Sale
 
-Your task: Ensure catalog filtering and sorting are evaluated completely across the full dataset before applying pagination slice limits.
+#### 1. What happens in the app?
+During a limited flash sale, a popular item (like the Nikon Z8 camera) has only 1 unit remaining in stock. Two independent customers (Customer A and Customer B) open checkout and click "Place Order" at the exact same millisecond.
+Because FlashCart checked inventory with a non-atomic read-then-write pattern, both checkout processes read `stock = 1`, both approve the purchase, both collect simulated payments, and remaining stock drops to `-1`!
 
-### BUG-07: False Payment Success Screen
-Problem: When a payment fails or is interrupted, navigating or redirecting to the payment confirmation page with `?status=success` in the query string causes the frontend to display a false "Order Confirmed & Paid" screen without verifying the actual payment state on the backend.
+#### 2. Why is this a serious problem?
+- **Overselling Deficit:** The company confirmed and charged two customers for an item it only has one of in the warehouse.
+- **Operational Chaos:** Warehouse staff must cancel an order, issue apologies, process refunds, and deal with dissatisfied customers.
 
-How to identify it: Place an order with payment state "FAILED" or "PENDING". Manually navigate to `/checkout/confirmation?orderId=FC-2026-10003&status=success`. Observe that the screen celebrates a successful payment even though the backend order remains unpaid.
+#### 3. How to fix it:
+In [src/services/inventory.service.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/services/inventory.service.js), wrap inventory reservation in an atomic `Mutex` lock. Each checkout request must wait in line so that reading stock and deducting stock happen together atomically. When Customer A takes the 1 unit, remaining stock is 0; when Customer B's turn arrives, the check immediately fails with *"Out of stock"*.
 
-Your task: Ensure the payment confirmation view verifies the actual order and payment transaction status with the backend API before displaying a success state.
+#### 4. Visual Evidence & Screenshots:
+- [Step 1: Customer A Checkout](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-003/screenshot-01.png): Customer A proceeds to checkout with the last camera unit (Stock: 1).
+- [Step 2: Customer B Simultaneous Checkout](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-003/screenshot-02.png): Customer B concurrently checking out the exact same camera.
+- [Step 3: Customer A Payment Succeeded](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-003/screenshot-03.png): Customer A's payment succeeds and claims the 1 available unit.
+- [Step 4: Customer B Oversell Error](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-003/screenshot-04.png): Customer B's order ALSO succeeds erroneously with the badge `🚨 Oversold! Order confirmed despite zero stock remaining!`.
+- [Step 5: Catalog Deficit State](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-003/screenshot-05.png): The Nikon Z8 product modal shows `🚨 Critical Inventory Deficit: Backordered (-1 units)!`.
 
-### BUG-08: Incorrect Warehouse Inventory Allocation
-Problem: When allocating order fulfillment across the 5 regional warehouses, the greedy allocation algorithm assigns inventory to a warehouse that has already exhausted its unreserved stock, causing warehouse inventory deficits.
+---
 
-How to identify it: Place orders requiring stock allocation across multiple fulfillment hubs. Check the warehouse allocation report. Notice that units are allocated to hubs with 0 unreserved stock rather than cascading to available secondary priority hubs.
+### Bug 4: Duplicate Payment Charges on Payment Retry
 
-Your task: Check both physical inventory and unreserved stock availability before assigning items to a warehouse, properly falling back to subsequent regional hubs according to priority.
+#### 1. What happens in the app?
+When an order is paid, the payment gateway popup displays "Payment Completed Successfully!". However, the "Retry Payment" button remains clickable and active. 
+If the customer clicks "Retry Payment", FlashCart does not check if the order was already paid. It contacts the gateway, charges the customer a second time, and logs two separate `PAYMENT_SUCCESS` transactions with two different transaction IDs for the same single order!
 
-## 2. Get Familiar With the Application
+#### 2. Why is this a serious problem?
+- **Double Charging:** Direct financial loss and customer complaints due to duplicate charges on credit cards or UPI.
+- **Audit Accounting Errors:** The accounting database shows conflicting revenue records for a single order.
 
-FlashCart is a production-grade e-commerce application that provides a unified platform for flash-sale shopping, order fulfillment, and multi-role operations.
+#### 3. How to fix it:
+In [src/services/payments.service.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/services/payments.service.js), check `db.payments` before creating any charge. If an existing transaction for `order.id` already has `status === 'SUCCESS'`, reject the payment with HTTP `400 Bad Request` stating *"Order has already been paid successfully"*.
 
-Core Features:
+#### 4. Visual Evidence & Screenshots:
+- [View DL-BUG-004 Step 1 (Gateway Screen)](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-004/screenshot-01.png):
+  - Highlights the vulnerability on the gateway modal where the "Retry Payment" button is erroneously enabled despite the payment having settled. Tagged with blue `💳 Transaction 1 Issued` and red `⚠️ Vulnerability: "Retry Payment" button remains active after success!`.
+- [View DL-BUG-004 Step 2 (Admin Audit Log)](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-004/screenshot-02.png):
+  - Shows the Admin Audit Log with two distinct `[PAYMENT_SUCCESS]` rows for the same order ID:
+    - Red badge: `🚨 Transaction 2: Duplicate SUCCESS charged to order (TXN-DUP-602456-8261)`
+    - Blue badge: `💳 Transaction 1: Original valid SUCCESS transaction (TXN-DUP-601600-3661)`
 
-Product Discovery: Browse products by category, apply dynamic filters, and view product details with high-resolution imagery.
+---
 
-Flash Sales: Discover time-limited promotional deals with live countdown timers.
+### Bug 5: Inverted Trending Products Ranking
 
-Cart & Checkout: Manage item quantities, apply discount coupons, select delivery addresses, and calculate taxes.
+#### 1. What happens in the app?
+FlashCart uses a Priority Queue (Binary Max-Heap) data structure to rank products on the homepage under "Trending Top Picks" based on sales volume, ratings, and customer reviews. 
+Due to an inverted comparison function, the algorithm behaved like a Min-Heap instead of a Max-Heap! The products with the lowest sales and lowest engagement were pushed to the top of the homepage, while top sellers like high-end laptops and smartphones were hidden at the bottom.
 
-Simulated Payments: Process simulated payments via UPI, Credit/Debit cards, and Net Banking with realistic states.
+#### 2. Why is this a serious problem?
+- **Reduced Revenue:** The store fails to promote its most popular and highest-converting products on the most visible area of the site.
+- **Poor User Experience:** Shoppers see unpopular or niche items on the storefront front page.
 
-Inventory & Warehouses: Track stock across multiple fulfillment hubs with greedy warehouse allocation.
+#### 3. How to fix it:
+In [src/services/products.service.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/services/products.service.js), fix the comparator function in `getTrendingProducts()`:
+- Use `a.computedScore - b.computedScore` (positive difference promotes `a` above `b` in the Max-Heap).
+- Add deterministic tie-breaking `b.id.localeCompare(a.id)` when scores are equal.
 
-Seller & Admin Portals: Manage product listings, view revenue analytics, monitor stock levels, and review platform metrics.
+#### 4. Visual Evidence & Screenshots:
+- [View DL-BUG-005 Screenshot](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-005/screenshot-01.png):
+  - Shows the Trending Top Picks grid with the lowest-ranked item displayed at Rank #1. Tagged with `🚨 Inverted Rank #1: Lowest-ranked product placed at top!` and `⚠️ Inverted Rank #2: Low-sales item promoted over bestsellers`.
 
-Authentication & Security: Secure JWT-based authentication with role-based access control (Customer, Seller, Admin) and password reset flows.
+---
 
-Demo Accounts:
+### Bug 6: Products Disappearing When Using Filters and Pages
 
-Customer: customer@flashcart.demo / FlashCart@123 (Storefront, Orders, Wishlist)
+#### 1. What happens in the app?
+In the Shop catalog, customers can filter products by Category, Brand, Price Range, and Rating, and navigate through pages using pagination buttons.
+If you select Category = "Audio" and Brand = "Sony" (which matches 2 products in our catalog), the pagination counter at the bottom of the page displays "Page 1 of 5" instead of "Page 1 of 1". Clicking to Page 3 causes the matching products to disappear completely, displaying *"No products match these filters"*.
 
-Seller: seller@flashcart.demo / FlashCart@123 (Seller Dashboard, Catalog Editor)
+#### 2. Why is this a serious problem?
+- **Broken Catalog Navigation:** Slicing before filtering cuts off valid items that exist in the catalog.
+- **Misleading Pagination:** The page count is computed from the entire store catalog (22 items ÷ 5 per page = 5 pages) rather than the filtered subset.
 
-Admin: admin@flashcart.demo / FlashCart@123 (Admin KPIs, Warehouses, Audit Logs)
+#### 3. How to fix it:
+In [src/services/products.service.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/services/products.service.js):
+1. **Filter Complete Dataset First:** Apply category, brand, and price filters across the complete product array.
+2. **Compute Filtered Page Totals:** Calculate `totalItems = filtered.length` and `totalPages = Math.ceil(filtered.length / limit)`.
+3. **Slice Only the Filtered Array:** Take the page slice (`filtered.slice(offset, offset + limit)`) strictly after filtering is complete.
 
-## 3. Expected Behaviour After Fixing the Bugs
+#### 4. Visual Evidence & Screenshots:
+- [View DL-BUG-006 Page 1 Screenshot](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-006/screenshot-01.png):
+  - Shows Category "Audio" and Brand "Sony" applied. Page 1 displays 2 products, but pagination says `Page 1 of 5`. Tagged with blue `🔍 Active Filters: Audio + Sony (2 total matches)` and red `⚠️ Erroneous Pagination: "Page 1 of 5" instead of "Page 1 of 1"!`.
+- [View DL-BUG-006 Page 3 Screenshot](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-006/screenshot-02.png):
+  - Shows Page 3 displaying an empty box with `🚨 Premature Empty State: "No products match these filters"`.
 
-Once all reported issues have been resolved, the application should behave as follows:
+---
 
-Checkout Idempotency: Multiple rapid checkout submissions create only a single order without duplicates.
+### Bug 7: False Payment Success Screen
 
-Search Response Consistency: Only results matching the most recent search query are displayed, discarding stale out-of-order responses.
+#### 1. What happens in the app?
+When returning from an external payment gateway redirect, if someone visits the callback URL with `status=success` in the web query string, the frontend immediately displays "Payment Completed Successfully!". 
+However, if the backend payment actually failed (or was never paid), the order in the database is still in `PENDING_PAYMENT` state. The UI falsely congratulates the user, while the order will never ship!
 
-Atomic Inventory Reservation: Concurrent orders for limited flash-sale inventory never result in negative stock or overselling.
+#### 2. Why is this a serious problem?
+- **False Customer Confidence:** Customers think their payment succeeded and their items are on the way, but the order is never fulfilled.
+- **Security Vulnerability:** A malicious client could manipulate query parameters to trigger success screens without paying.
 
-Payment Transaction Idempotency: Payment retries on already paid orders do not create duplicate transactions or double-charge the customer.
+#### 3. How to fix it:
+In [src/services/payments.service.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/services/payments.service.js), the verification endpoint `/api/payments/verify/:orderId` must look up the true database payment record for that order. It must only return `verified: true` if `payment.status === 'SUCCESS' && order.status !== 'PENDING_PAYMENT'`, ignoring any unverified URL redirect parameters.
 
-Product Ranking Heap Ordering: The Priority Queue Max-Heap orders products strictly by composite sales score, placing top-scoring products at the top.
+#### 4. Visual Evidence & Screenshots:
+- [View DL-BUG-007 Step 1 (False Confirmation)](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-007/screenshot-01.png):
+  - Shows the simulated gateway popup displaying `Payment Completed Successfully!` even though the backend returned failure. Tagged with red `🚨 False Success Heading: Backend payment actually FAILED!`.
+- [View DL-BUG-007 Step 2 (Order History)](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-007/screenshot-02.png):
+  - Shows the customer's actual order history. The order status is still `PENDING_PAYMENT` (Unpaid), exposing the mismatch.
 
-Combined Filtering and Pagination: Applying multiple filters alongside pagination preserves all matching items across pages without dropping items prematurely.
+---
 
-Verified Payment Confirmation: The payment confirmation screen verifies transaction state against the backend API and only confirms orders that are genuinely paid.
+### Bug 8: Assigning Orders to Depleted Regional Warehouses
 
-Warehouse Inventory Allocation: Order fulfillment allocates stock only from warehouses with available unreserved inventory, falling back to secondary hubs when top-priority hubs are exhausted.
+#### 1. What happens in the app?
+FlashCart has 5 regional fulfillment hubs across India:
+- `WH-MUM-01` (Priority 1)
+- `WH-DEL-02` (Priority 2)
+- `WH-BLR-03` (Priority 3)
+- `WH-CCU-04` (Priority 4)
+- `WH-MAA-05` (Priority 5)
 
-All existing e-commerce functionality must continue working as expected.
+When a customer orders an item, the allocator algorithm is supposed to fulfill the order from the highest-priority warehouse with available stock. 
+However, the allocator checked raw physical stock instead of unreserved available stock! For example, `WH-MUM-01` had 3 stock and 3 reserved units (meaning `0` available units). The allocator assigned an order to `WH-MUM-01` anyway, reducing stock to 2 with 3 reserved (a negative deficit of `-1`!), while ignoring `WH-DEL-02` which had 1 unreserved unit available.
+
+#### 2. Why is this a serious problem?
+- **Warehouse Bottlenecks:** Orders get assigned to warehouses that cannot fulfill them because all physical stock is already promised to other orders.
+- **Stock Depletion Deficit:** Warehouses run into negative inventory capacity.
+
+#### 3. How to fix it:
+In [src/services/warehouse.service.js](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/src/services/warehouse.service.js):
+1. **Sort by Priority:** Sort warehouses ascending by priority (`priority: 1` first).
+2. **Compute Net Available Stock:** Calculate `availableInWh = Math.max(0, inv.stock - inv.reservedStock)`.
+3. **Sequential Allocation:** Only allocate up to `availableInWh`. When a warehouse has 0 available units, smoothly overflow to the next priority warehouse (`WH-DEL-02`).
+
+#### 4. Visual Evidence & Screenshots:
+- [View DL-BUG-008 Screenshot](file:///c:/Users/prakh/Desktop/DEBUG_LAB_NODEEXPRESS_APPLICATIONS/flashcart/debuglab/visual-evidence/DL-BUG-008/screenshot-01.png):
+  - Shows the Admin Warehouse status dashboard. Tagged with red `🚨 WH-MUM-01: Stock 2 < Reserved 3 (Deficit: -1)` and yellow `⚠️ WH-DEL-02: Had 1 unreserved unit available`.
+
+---
+
+## How to Run & Verify FlashCart
+
+### 1. Installation
+```bash
+npm install
+```
+
+### 2. Running the Development Server
+```bash
+# Run with automatic code watching and live reload
+npm run dev
+
+# Or run regular start
+npm start
+```
+Open your browser at: `http://localhost:3000`
+
+### 3. Demo Credentials
+- **Customer Account:** `customer@flashcart.demo` / `FlashCart@123`
+- **Seller Account:** `seller@flashcart.demo` / `FlashCart@123`
+- **Admin Account:** `admin@flashcart.demo` / `FlashCart@123`
+
+---
+
+## Automated Testing & Proof
+
+FlashCart includes an automated test suite verifying all 8 bugs:
+
+```bash
+# Challenge Mode: Runs against the buggy code — all 8 tests fail as expected
+npm run test:challenge
+
+# Reference Mode: Runs against the fixed code — all 8 tests pass 100%
+npm run test:reference
+```
+
+To regenerate all 16 annotated screenshots at any time:
+```bash
+npm run capture:evidence
+```
+The script will run headless browser scenarios, apply the high-contrast callouts and demonstration cards, and validate that every screenshot meets strict dimension and image format standards.

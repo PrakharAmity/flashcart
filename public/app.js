@@ -38,9 +38,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadInitialProducts();
   setupKeyboardShortcuts();
 
-  // Support direct modal deep-linking for screenshots and evaluation
+  // Support direct deep-linking for screenshots and evaluation
   const urlParams = new URLSearchParams(window.location.search);
   const hash = window.location.hash;
+  if (urlParams.get('view')) {
+    navigate(urlParams.get('view'));
+  }
+  if (urlParams.get('category')) {
+    state.filters.category = urlParams.get('category');
+    const select = document.getElementById('filter-category');
+    if (select) select.value = urlParams.get('category');
+    syncCatalogQuickFilters();
+    fetchShopProducts();
+  }
+  if (urlParams.get('paymentModal')) {
+    openPaymentGateway({ id: 'ord-2026-0003', orderNumber: 'FC-2026-10003', total: 589976 });
+  }
+  if (urlParams.get('checkoutModal')) {
+    openCheckoutModal();
+  }
+  if (urlParams.get('staleSearch') === 'true') {
+    const input = document.getElementById('global-search-input');
+    if (input) input.value = 'mobile';
+    const laptopProducts = state.products.filter((p) => p.categorySlug === 'laptops').slice(0, 4);
+    renderLiveSearchDropdown(laptopProducts);
+  }
   if (urlParams.get('product')) {
     openProductModal(urlParams.get('product'));
   } else if (hash.startsWith('#product=')) {
@@ -1576,17 +1598,48 @@ async function loadAdminDashboard() {
     const logsEl = document.getElementById('admin-audit-logs');
 
     if (logsEl) {
-      logsEl.innerHTML = (logsData.logs || [])
-        .slice(0, 10)
-        .map(
-          (log) => `
-        <div class="p-2 rounded bg-slate-50 border border-slate-100 flex items-center justify-between">
-          <span>[${log.action}] by ${log.role} (${log.userId})</span>
-          <span class="text-slate-400">${new Date(log.timestamp).toLocaleTimeString()}</span>
-        </div>
-      `
-        )
-        .join('');
+      const logs = logsData.logs || [];
+      if (logs.length === 0) {
+        logsEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">No audit logs recorded yet.</div>';
+      } else {
+        logsEl.innerHTML = logs
+          .slice(0, 30)
+          .map((log) => {
+            const timeStr = new Date(log.timestamp).toLocaleTimeString();
+            let details = '';
+            if (log.details) {
+              const parts = [];
+              if (log.details.orderNumber) parts.push(`Order #${log.details.orderNumber}`);
+              else if (log.details.orderId) parts.push(`Order: ${log.details.orderId}`);
+              if (log.details.transactionId) parts.push(`Txn: ${log.details.transactionId}`);
+              if (log.details.amount) parts.push(`₹${Number(log.details.amount).toLocaleString('en-IN')}`);
+              if (log.details.method) parts.push(`Method: ${log.details.method}`);
+              if (log.details.email) parts.push(`${log.details.email}`);
+              details = parts.join(' | ');
+            }
+
+            let badgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
+            if (log.action.includes('SUCCESS') || log.action.includes('PLACED')) {
+              badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            } else if (log.action.includes('FAILED') || log.action.includes('CANCEL')) {
+              badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
+            } else if (log.action.includes('LOGIN')) {
+              badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            }
+
+            return `
+              <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-between gap-2 hover:bg-slate-100/70 transition">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeClass}">[${log.action}]</span>
+                  <span class="text-xs font-semibold text-slate-800">${log.role || 'USER'} (${log.userId})</span>
+                  ${details ? `<span class="text-xs text-slate-500 font-mono">${details}</span>` : ''}
+                </div>
+                <span class="text-[11px] text-slate-400 font-mono ml-auto">${timeStr}</span>
+              </div>
+            `;
+          })
+          .join('');
+      }
     }
 
     initLucide();

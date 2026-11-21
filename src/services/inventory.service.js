@@ -1,7 +1,6 @@
 import { db } from '../db/index.js';
 import { config } from '../config.js';
 
-// Mutex lock for thread-safe sequential operations in Node.js
 class Mutex {
   constructor() {
     this._queue = [];
@@ -36,8 +35,6 @@ export const inventoryService = {
     const qty = parseInt(quantity, 10) || 1;
 
     if (config.isReferenceMode) {
-      // REFERENCE FIX (DL-BUG-003):
-      // Strict atomic critical section locking prevents race condition
       await inventoryMutex.lock();
       try {
         const product = db.findProductById(productId);
@@ -49,7 +46,6 @@ export const inventoryService = {
           throw new Error(`Out of stock. Only ${product.stock} units available for "${product.title}"`);
         }
 
-        // Atomically decrement
         product.stock -= qty;
 
         return {
@@ -62,25 +58,17 @@ export const inventoryService = {
         inventoryMutex.unlock();
       }
     } else {
-      // CHALLENGE BUG DL-BUG-003:
-      // Non-atomic read-then-write:
-      // Check happens first, then an asynchronous gap (e.g. database query / external validation)
-      // occurs before decrementing. When 2 concurrent requests hit this simultaneously,
-      // both read stock = 1, pass the check, and both decrement, causing overselling!
       const product = db.findProductById(productId);
       if (!product) {
         throw new Error(`Product not found: ${productId}`);
       }
 
-      // Check stock
       if (product.stock < qty) {
         throw new Error(`Out of stock. Only ${product.stock} units available for "${product.title}"`);
       }
 
-      // Vulnerable async gap
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Decrement without lock (causes negative stock or double deduction)
       product.stock -= qty;
 
       return {

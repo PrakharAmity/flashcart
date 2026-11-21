@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "capture:evidence": "node debuglab/visual-evidence/capture-evidence.js",
     "test": "node tests/runner.js",
     "test:reference": "node --env-file=.env.reference tests/runner.js || set REFERENCE_MODE=true && node tests/runner.js",
     "test:challenge": "set REFERENCE_MODE=false && node tests/runner.js"
@@ -25,5 +26,9 @@
     "debuglab"
   ],
   "author": "DEBUG//LAB",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "playwright": "^1.65.1"
+  }
 }

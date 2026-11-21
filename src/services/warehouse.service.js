@@ -26,15 +26,12 @@ export const warehouseService = {
       const inventories = db.warehouseInventory.filter((wi) => wi.productId === productId);
 
       if (config.isReferenceMode) {
-        // REFERENCE FIX:
-        // 1. Sort warehouses strictly by priority (1 is highest priority)
         const sortedInventories = [...inventories].sort((a, b) => {
           const whA = db.warehouses.find((w) => w.id === a.warehouseId);
           const whB = db.warehouses.find((w) => w.id === b.warehouseId);
           return (whA ? whA.priority : 99) - (whB ? whB.priority : 99);
         });
 
-        // 2. Check total net available stock (stock - reservedStock)
         const totalNetAvailable = sortedInventories.reduce(
           (sum, inv) => sum + Math.max(0, inv.stock - inv.reservedStock),
           0
@@ -46,7 +43,6 @@ export const warehouseService = {
           );
         }
 
-        // 3. Allocate sequentially respecting reservations and priorities
         let remainingToAllocate = quantity;
         const itemAllocations = [];
 
@@ -63,7 +59,6 @@ export const warehouseService = {
             quantity: take
           });
 
-          // Create an inventory reservation record
           db.inventoryReservations.push({
             id: `res-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
             orderId: orderId || 'pending-order',
@@ -85,22 +80,15 @@ export const warehouseService = {
           isFulfilled: remainingToAllocate === 0
         });
       } else {
-        // CHALLENGE BUG DL-BUG-008:
-        // Flawed greedy allocation:
-        // 1. Checks raw 'stock' instead of available stock (ignoring existing reservedStock!)
-        // 2. Sorts warehouses arbitrarily or picks single warehouse without splitting,
-        // resulting in over-allocation of reserved stock or failing valid fulfillments.
         const buggySorted = [...inventories].sort((a, b) => b.stock - a.stock);
 
         let remaining = quantity;
         const itemAllocations = [];
 
         for (const inv of buggySorted) {
-          // Bug: uses raw stock without considering reservedStock
           if (inv.stock <= 0) continue;
 
           const take = Math.min(remaining, inv.stock);
-          // Bug: does not properly update reservedStock or over-allocates beyond net capacity
           inv.stock = Math.max(0, inv.stock - take);
           remaining -= take;
 

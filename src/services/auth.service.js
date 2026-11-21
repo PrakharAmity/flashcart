@@ -2,8 +2,8 @@ import { db } from '../db/index.js';
 import { hashPassword, verifyPassword, generateToken, verifyToken } from '../utils/security.js';
 import { config } from '../config.js';
 
-const passwordResetTokens = new Map(); // token -> { email, expiresAt, used: boolean }
-const activeRefreshSessions = new Map(); // refreshToken -> { userId, expiresAt }
+const passwordResetTokens = new Map();
+const activeRefreshSessions = new Map();
 
 export const authService = {
   register(userData) {
@@ -145,7 +145,6 @@ export const authService = {
       throw err;
     }
 
-    // Refresh token rotation: revoke old token and issue a new one
     activeRefreshSessions.delete(refreshToken);
     const newRefreshToken = `ref-${Date.now()}-${Math.random().toString(36).substring(2)}`;
     activeRefreshSessions.set(newRefreshToken, { userId: user.id, expiresAt: Date.now() + 7 * 86400000 });
@@ -168,7 +167,6 @@ export const authService = {
 
   forgotPassword(email) {
     const user = db.findUserByEmail(email);
-    // Generic response to prevent account enumeration
     if (!user) {
       return { success: true, message: 'If this email is registered, a password reset token has been sent.' };
     }
@@ -176,14 +174,14 @@ export const authService = {
     const resetToken = `rst-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
     passwordResetTokens.set(resetToken, {
       email: user.email,
-      expiresAt: Date.now() + 15 * 60 * 1000, // 15 mins
+      expiresAt: Date.now() + 15 * 60 * 1000,
       used: false
     });
 
     return {
       success: true,
       message: 'If this email is registered, a password reset token has been sent.',
-      devResetToken: resetToken // Expose in development simulation
+      devResetToken: resetToken
     };
   },
 

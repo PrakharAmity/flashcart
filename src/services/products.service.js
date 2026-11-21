@@ -111,16 +111,11 @@ export const productsService = {
     }));
 
     if (config.isReferenceMode) {
-      // REFERENCE FIX:
-      // Correct Max-Heap comparator:
-      // Primary: higher computedScore first
-      // Tie-breaker: deterministic product ID comparison
       const comparator = (a, b) => {
         const diff = a.computedScore - b.computedScore;
         if (Math.abs(diff) > 0.0001) {
-          return diff; // positive means a has higher score
+          return diff;
         }
-        // Deterministic tie breaker
         return b.id.localeCompare(a.id);
       };
 
@@ -133,11 +128,7 @@ export const productsService = {
       }
       return ranked;
     } else {
-      // CHALLENGE BUG DL-BUG-005:
-      // Incorrect heap comparator: inverts priority comparison logic for close/equal scores,
-      // or sifts up smaller values due to inverted comparison operator (< instead of >).
       const buggyComparator = (a, b) => {
-        // Bug: inverted score subtraction causing inverted priority extraction
         return b.computedScore - a.computedScore;
       };
 
@@ -152,7 +143,6 @@ export const productsService = {
     }
   },
 
-  // DL-BUG-006: Incorrect Combined Filters and Pagination
   getProductsFiltered(options = {}) {
     const {
       category,
@@ -172,8 +162,6 @@ export const productsService = {
     const limitNum = Math.max(1, parseInt(limit, 10) || 12);
 
     if (config.isReferenceMode) {
-      // REFERENCE FIX:
-      // 1. Apply ALL filters across the entire dataset first
       let filtered = db.products.filter((p) => {
         if (category && category !== 'all' && p.categorySlug !== category) return false;
         if (brand && p.brand.toLowerCase() !== brand.toLowerCase()) return false;
@@ -196,7 +184,6 @@ export const productsService = {
         return true;
       });
 
-      // 2. Deterministic sorting
       filtered.sort((a, b) => {
         if (sort === 'price-low') {
           return a.price !== b.price ? a.price - b.price : a.id.localeCompare(b.id);
@@ -210,7 +197,6 @@ export const productsService = {
         if (sort === 'newest') {
           return b.id.localeCompare(a.id);
         }
-        // Default: popularity
         const scoreA = computeProductScore(a);
         const scoreB = computeProductScore(b);
         return scoreB !== scoreA ? scoreB - scoreA : a.id.localeCompare(b.id);
@@ -233,12 +219,7 @@ export const productsService = {
         }
       };
     } else {
-      // CHALLENGE BUG DL-BUG-006:
-      // Buggy behavior: applies pagination slicing BEFORE or DURING filtering,
-      // or applies an erroneous offset slicing on an un-narrowed subset,
-      // resulting in missing items or inconsistent page boundaries when combined filters are active.
       const offset = (pageNum - 1) * limitNum;
-      // Bug: slices the raw dataset by page/limit first, THEN filters that subset
       const preSliced = db.products.slice(offset, offset + limitNum * 2);
 
       let filtered = preSliced.filter((p) => {

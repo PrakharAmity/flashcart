@@ -6,7 +6,6 @@ export const paymentsService = {
     return db.findPaymentByOrderId(orderId);
   },
 
-  // DL-BUG-007: False Payment Success Screen / Verification
   verifyPayment(orderId, redirectStatus = null) {
     const order = db.findOrderById(orderId);
     if (!order) {
@@ -14,12 +13,9 @@ export const paymentsService = {
     }
 
     if (!config.isReferenceMode) {
-      // CHALLENGE BUG DL-BUG-007:
-      // Falsely trusts redirect status parameter without validating actual database record!
-      // If client redirect query is 'success', it returns verified: true even for an unpaid order!
       if (redirectStatus === 'success' || (order && order.status !== 'CANCELLED')) {
         return {
-          verified: true, // Falsely verified!
+          verified: true,
           orderId: order.id,
           orderNumber: order.orderNumber,
           orderStatus: order.status,
@@ -28,8 +24,6 @@ export const paymentsService = {
       }
     }
 
-    // REFERENCE FIX (DL-BUG-007):
-    // Strictly verify against backend database payment records
     const payment = db.findPaymentByOrderId(order.id);
     if (!payment) {
       return {
@@ -39,6 +33,7 @@ export const paymentsService = {
         paymentStatus: 'NOT_FOUND'
       };
     }
+
     return {
       verified: payment.status === 'SUCCESS' && order.status !== 'PENDING_PAYMENT',
       orderId: order.id,
@@ -51,7 +46,6 @@ export const paymentsService = {
     };
   },
 
-  // DL-BUG-004: Duplicate Payment Transactions
   async processPayment(orderId, paymentData = {}) {
     const order = db.findOrderById(orderId);
     if (!order) {
@@ -60,13 +54,11 @@ export const paymentsService = {
 
     const {
       method = 'UPI',
-      simulatedOutcome = 'SUCCESS', // 'SUCCESS' | 'FAILURE'
+      simulatedOutcome = 'SUCCESS',
       idempotencyKey = null
     } = paymentData;
 
     if (config.isReferenceMode) {
-      // REFERENCE FIX (DL-BUG-004):
-      // Check if order is already paid or has a completed transaction
       const existingSuccess = db.payments.find(
         (p) => p.orderId === order.id && p.status === 'SUCCESS'
       );
@@ -78,7 +70,6 @@ export const paymentsService = {
         throw error;
       }
 
-      // Check idempotency key among payment attempts
       if (idempotencyKey) {
         const existingAttempt = db.paymentAttempts.find(
           (pa) => pa.idempotencyKey === idempotencyKey
@@ -93,7 +84,6 @@ export const paymentsService = {
         }
       }
 
-      // Process new payment
       const isSuccess = simulatedOutcome === 'SUCCESS';
       const paymentId = `pay-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const txnId = `TXN-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -142,10 +132,6 @@ export const paymentsService = {
         isDuplicate: false
       };
     } else {
-      // CHALLENGE BUG DL-BUG-004:
-      // No duplicate payment protection:
-      // Does not check if order is already paid, does not check idempotencyKey!
-      // Repeated attempts generate multiple successful payment transactions on the same order!
       const isSuccess = simulatedOutcome === 'SUCCESS';
       const paymentId = `pay-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
       const txnId = `TXN-DUP-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -178,7 +164,15 @@ export const paymentsService = {
 
       if (isSuccess) {
         order.status = 'PROCESSING';
+        order.updatedAt = new Date().toISOString();
       }
+
+      db.addAuditLog({
+        action: isSuccess ? 'PAYMENT_SUCCESS' : 'PAYMENT_FAILED',
+        userId: order.userId,
+        role: 'CUSTOMER',
+        details: { orderId: order.id, transactionId: txnId, amount: order.total, method }
+      });
 
       return {
         payment: paymentRecord,

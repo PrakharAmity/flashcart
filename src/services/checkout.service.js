@@ -3,7 +3,6 @@ import { config } from '../config.js';
 import { inventoryService } from './inventory.service.js';
 import { warehouseService } from './warehouse.service.js';
 
-// In-flight lock map and idempotency store
 const activeCheckoutLocks = new Set();
 const completedIdempotentCheckouts = new Map();
 
@@ -22,13 +21,10 @@ export const checkoutService = {
     const effectiveKey = idempotencyKey || checkoutData.idempotencyKey || null;
 
     if (config.isReferenceMode) {
-      // REFERENCE FIX (DL-BUG-001):
-      // 1. Check idempotency cache first
       if (effectiveKey && completedIdempotentCheckouts.has(effectiveKey)) {
         return completedIdempotentCheckouts.get(effectiveKey);
       }
 
-      // 2. Lock user's checkout session to prevent concurrent double-click
       const lockKey = `checkout-${userId}`;
       if (activeCheckoutLocks.has(lockKey)) {
         const error = new Error('A checkout operation is already in progress. Please wait.');
@@ -39,7 +35,6 @@ export const checkoutService = {
       activeCheckoutLocks.add(lockKey);
 
       try {
-        // Calculate items and total
         let subtotal = 0;
         const orderItems = [];
 
@@ -49,7 +44,6 @@ export const checkoutService = {
             throw new Error(`Product ${item.productId} no longer exists`);
           }
 
-          // Atomically reserve stock
           await inventoryService.reserveStock(product.id, item.quantity);
 
           const itemTotal = product.price * item.quantity;
@@ -64,7 +58,6 @@ export const checkoutService = {
           });
         }
 
-        // Warehouse allocation
         const warehouseAllocations = warehouseService.allocateInventory(
           orderItems.map((oi) => ({ productId: oi.productId, quantity: oi.quantity }))
         );
@@ -74,7 +67,6 @@ export const checkoutService = {
           oi.warehouseAllocations = alloc ? alloc.allocations : [];
         });
 
-        // Apply coupon if any
         let discount = 0;
         let couponCode = checkoutData.couponCode || null;
         if (couponCode) {
@@ -113,8 +105,6 @@ export const checkoutService = {
         };
 
         db.orders.unshift(newOrder);
-
-        // Clear user cart
         db.carts[userId] = [];
 
         db.addAuditLog({
@@ -133,10 +123,6 @@ export const checkoutService = {
         activeCheckoutLocks.delete(lockKey);
       }
     } else {
-      // CHALLENGE BUG DL-BUG-001:
-      // No idempotency check and no checkout concurrency lock.
-      // Artificial delay simulates slow network / external gateway initiation,
-      // allowing a double-click or simultaneous submissions to both proceed and create DUPLICATE orders!
       await new Promise((resolve) => setTimeout(resolve, 80));
 
       let subtotal = 0;
@@ -146,7 +132,6 @@ export const checkoutService = {
         const product = db.findProductById(item.productId);
         if (!product) continue;
 
-        // In challenge mode, reservation uses buggy path
         await inventoryService.reserveStock(product.id, item.quantity);
 
         subtotal += product.price * item.quantity;
@@ -159,11 +144,31 @@ export const checkoutService = {
         });
       }
 
-      const tax = Math.round(subtotal * 0.18);
-      const deliveryFee = subtotal > 999 ? 0 : 99;
-      const total = subtotal + tax + deliveryFee;
+      const warehouseAllocations = warehouseService.allocateInventory(
+        orderItems.map((oi) => ({ productId: oi.productId, quantity: oi.quantity }))
+      );
 
-      const orderId = `ord-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      orderItems.forEach((oi) => {
+        const alloc = warehouseAllocations.find((a) => a.productId === oi.productId);
+        oi.warehouseAllocations = alloc ? alloc.allocations : [];
+      });
+
+      let discount = 0;
+      let couponCode = checkoutData.couponCode || null;
+      if (couponCode) {
+        const coupon = db.coupons.find((c) => c.code.toUpperCase() === couponCode.toUpperCase());
+        if (coupon && subtotal >= coupon.minOrderValue) {
+          discount = Math.min(coupon.maxDiscount, Math.round((subtotal * coupon.discountPercent) / 100));
+        } else {
+          couponCode = null;
+        }
+      }
+
+      const tax = Math.round((subtotal - discount) * 0.18);
+      const deliveryFee = subtotal > 999 ? 0 : 99;
+      const total = subtotal - discount + tax + deliveryFee;
+
+      const orderId = `ord-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const orderNumber = `FC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
 
       const newOrder = {
@@ -174,11 +179,11 @@ export const checkoutService = {
         subtotal,
         tax,
         deliveryFee,
-        discount: 0,
-        couponCode: null,
+        discount,
+        couponCode,
         total,
         status: 'PENDING_PAYMENT',
-        shippingAddress: checkoutData.shippingAddress || null,
+        shippingAddress: checkoutData.shippingAddress || db.addresses.find((a) => a.userId === userId) || null,
         paymentMethod: checkoutData.paymentMethod || 'UPI',
         idempotencyKey: effectiveKey,
         createdAt: new Date().toISOString(),
@@ -186,9 +191,14 @@ export const checkoutService = {
       };
 
       db.orders.unshift(newOrder);
-
-      // Cart is only cleared at the end, so during concurrent requests both read cart!
       db.carts[userId] = [];
+
+      db.addAuditLog({
+        action: 'ORDER_PLACED',
+        userId,
+        role: user.role,
+        details: { orderId: newOrder.id, orderNumber: newOrder.orderNumber, total: newOrder.total }
+      });
 
       return newOrder;
     }
