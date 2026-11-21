@@ -836,8 +836,8 @@ export const seedProducts = [
     reviewCount: 240,
     salesScore: 590,
     sellerId: 'seller-5',
-    stock: 8,
-    isFlashSale: false,
+    stock: -1,
+    isFlashSale: true,
     images: ['https://images.unsplash.com/photo-1512790182412-b19e6d62bc39?w=800&auto=format&fit=crop&q=80'],
     specs: { sensor: '45.7MP Stacked Full-Frame', burst: '120 fps Electronic', video: '8.3K 60p N-RAW' }
   },

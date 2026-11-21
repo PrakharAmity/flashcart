@@ -31,17 +31,29 @@ const state = {
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', async () => {
   initLucide();
+  setupHeroCarousel();
   initCountdownTimer();
   await checkSession();
-  await loadCategories();
   await loadCart();
   await loadInitialProducts();
   setupKeyboardShortcuts();
+
+  // Support direct modal deep-linking for screenshots and evaluation
+  const urlParams = new URLSearchParams(window.location.search);
+  const hash = window.location.hash;
+  if (urlParams.get('product')) {
+    openProductModal(urlParams.get('product'));
+  } else if (hash.startsWith('#product=')) {
+    openProductModal(hash.replace('#product=', ''));
+  }
 });
 
 function initLucide() {
   if (window.lucide) {
     window.lucide.createIcons();
+    document.querySelectorAll('svg.lucide:not([aria-label]):not([role])').forEach((icon) => {
+      icon.setAttribute('aria-hidden', 'true');
+    });
   }
 }
 
@@ -67,6 +79,15 @@ function initCountdownTimer() {
 
 function setupKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const userMenu = document.getElementById('user-dropdown-menu');
+      if (userMenu && !userMenu.classList.contains('hidden')) {
+        e.preventDefault();
+        closeHeaderMenus(true);
+        return;
+      }
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       const searchInput = document.getElementById('global-search-input');
@@ -172,9 +193,103 @@ function handleAuthAction() {
 }
 
 // ==================== NAVIGATION ====================
+const homeHeroSlides = [
+  { productId: 'prod-mob-08', productName: 'Motorola Edge 50 Ultra', src: 'images/motorola-edge-50-ultra.jpg', alt: 'Motorola Edge 50 Ultra smartphone, shown front and back', badge: 'Flash Sale Live' },
+  { productId: 'prod-mob-06', productName: 'Nothing Phone 3', src: 'images/nothing-phone-3.jpg', alt: 'Nothing Phone 3 smartphone', badge: 'New arrival' },
+  { productId: 'prod-cam-05', productName: 'GoPro HERO13', src: 'images/gopro-hero-13.jpg', alt: 'GoPro HERO13 action camera', badge: 'Ready for adventure' }
+];
+let homeHeroSlideIndex = 0;
+let homeHeroRotationTimer = null;
+let homeHeroPointerPaused = false;
+let homeHeroFocusPaused = false;
+let dealSlideIndex = 0;
+let dealRotationTimer = null;
+let dealPointerPaused = false;
+let dealFocusPaused = false;
+let dealsCarouselReady = false;
+
+function syncHeroCarouselAutoplay() {
+  if (homeHeroRotationTimer) {
+    clearInterval(homeHeroRotationTimer);
+    homeHeroRotationTimer = null;
+  }
+
+  if (homeHeroPointerPaused || homeHeroFocusPaused || document.hidden || state.currentView !== 'home') return;
+  homeHeroRotationTimer = setInterval(() => setHeroSlide(homeHeroSlideIndex + 1), 5000);
+}
+
+function setupHeroCarousel() {
+  const carousel = document.getElementById('home-hero-carousel');
+  if (!carousel) return;
+
+  carousel.addEventListener('pointerenter', () => {
+    homeHeroPointerPaused = true;
+    syncHeroCarouselAutoplay();
+  });
+  carousel.addEventListener('pointerleave', () => {
+    homeHeroPointerPaused = false;
+    syncHeroCarouselAutoplay();
+  });
+  carousel.addEventListener('focusin', () => {
+    homeHeroFocusPaused = true;
+    syncHeroCarouselAutoplay();
+  });
+  carousel.addEventListener('focusout', (event) => {
+    if (!carousel.contains(event.relatedTarget)) {
+      homeHeroFocusPaused = false;
+      syncHeroCarouselAutoplay();
+    }
+  });
+  document.addEventListener('visibilitychange', syncHeroCarouselAutoplay);
+  syncHeroCarouselAutoplay();
+}
+
+function setHeroSlide(index) {
+  homeHeroSlideIndex = (index + homeHeroSlides.length) % homeHeroSlides.length;
+  const slide = homeHeroSlides[homeHeroSlideIndex];
+  const image = document.getElementById('home-hero-image');
+  const badge = document.getElementById('home-hero-badge');
+  if (image) {
+    image.src = slide.src;
+    image.alt = slide.alt;
+    image.setAttribute('aria-label', `View ${slide.productName}`);
+  }
+  if (badge) badge.textContent = slide.badge;
+  document.querySelectorAll('[data-hero-slide]').forEach((dot) => {
+    const active = Number(dot.dataset.heroSlide) === homeHeroSlideIndex;
+    dot.setAttribute('aria-current', String(active));
+    dot.classList.toggle('w-5', active);
+    dot.classList.toggle('w-2', !active);
+    dot.classList.toggle('bg-brand-600', active);
+    dot.classList.toggle('bg-white/80', !active);
+  });
+}
+
+function changeHeroSlide(direction) {
+  setHeroSlide(homeHeroSlideIndex + direction);
+}
+
+function openHeroProduct() {
+  openProductModal(homeHeroSlides[homeHeroSlideIndex].productId);
+}
+
+function openHeroProductFromKey(event) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  openHeroProduct();
+}
+
 function navigate(viewName, params = {}) {
+  const requestedViewName = viewName;
+  if (viewName === 'deals') {
+    viewName = 'shop';
+    params = { ...params, isFlashSale: true };
+  }
+
   state.currentView = viewName;
-  const views = ['home', 'shop', 'profile', 'seller', 'admin', 'wishlist'];
+  syncHeroCarouselAutoplay();
+  syncDealsCarouselAutoplay();
+  const views = ['home', 'shop', 'profile', 'seller', 'admin', 'wishlist', 'about'];
   views.forEach((v) => {
     const el = document.getElementById(`view-${v}`);
     if (el) el.classList.add('hidden');
@@ -188,15 +303,28 @@ function navigate(viewName, params = {}) {
     const navLink = document.getElementById(id);
     if (navLink) {
       navLink.className = 'py-2.5 text-slate-600 hover:text-brand-600 transition';
+      navLink.removeAttribute('aria-current');
     }
   });
 
+  const activeNavId = requestedViewName === 'deals'
+    ? 'nav-deals'
+    : viewName === 'shop'
+      ? 'nav-shop'
+      : viewName === 'home'
+        ? 'nav-home'
+        : viewName === 'about'
+          ? 'nav-about'
+          : null;
+  const activeNav = activeNavId && document.getElementById(activeNavId);
+  if (activeNav) {
+    activeNav.className = 'py-2.5 text-brand-600 border-b-2 border-brand-600 transition';
+    activeNav.setAttribute('aria-current', 'page');
+  }
+
   if (viewName === 'home') {
-    const el = document.getElementById('nav-home');
-    if (el) el.className = 'py-2.5 text-brand-600 border-b-2 border-brand-600 transition';
+    // Home content is already present in the page shell.
   } else if (viewName === 'shop') {
-    const el = document.getElementById('nav-shop');
-    if (el) el.className = 'py-2.5 text-brand-600 border-b-2 border-brand-600 transition';
     if (params.filter === 'newest') {
       state.filters.sort = 'newest';
       const sortSelect = document.getElementById('sort-select');
@@ -207,6 +335,7 @@ function navigate(viewName, params = {}) {
       const fsCheck = document.getElementById('filter-flashsale');
       if (fsCheck) fsCheck.checked = true;
     }
+    syncCatalogQuickFilters();
     fetchShopProducts();
   } else if (viewName === 'profile') {
     loadCustomerOrders();
@@ -223,32 +352,6 @@ function navigate(viewName, params = {}) {
 }
 
 // ==================== PRODUCT LOADING & RENDERING ====================
-async function loadCategories() {
-  try {
-    const res = await fetch('/api/categories');
-    const data = await res.json();
-    state.categories = data.categories || [];
-    renderCategoryDropdown();
-  } catch (err) {
-    console.error('Failed to load categories', err);
-  }
-}
-
-function renderCategoryDropdown() {
-  const container = document.getElementById('category-dropdown-menu');
-  if (!container) return;
-  container.innerHTML = state.categories
-    .map(
-      (cat) => `
-    <button onclick="filterByCategory('${cat.slug}'); toggleCategoryMenu();" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between">
-      <span>${cat.name}</span>
-      <span class="text-[10px] text-slate-400 font-normal">${cat.productCount} items</span>
-    </button>
-  `
-    )
-    .join('');
-}
-
 async function loadInitialProducts() {
   try {
     // 1. Trending via Max-Heap (DL-BUG-005)
@@ -258,13 +361,100 @@ async function loadInitialProducts() {
     renderProductGrid('trending-product-grid', state.trending);
 
     // 2. Deals of the day
-    const dealsRes = await fetch('/api/products?isFlashSale=true&limit=4');
+    const dealsRes = await fetch('/api/flash-sales');
     const dealsData = await dealsRes.json();
-    state.deals = dealsData.products || [];
-    renderProductGrid('deals-product-grid', state.deals);
+    state.deals = (dealsData.products || []).slice(0, 4);
+    renderDealsCarousel();
+    setupDealsCarousel();
   } catch (err) {
     console.error('Failed to load initial products', err);
   }
+}
+
+function renderDealsCarousel() {
+  const carousel = document.getElementById('deals-carousel');
+  const emptyState = document.getElementById('deals-empty');
+  if (!carousel || !emptyState) return;
+
+  const hasDeals = state.deals.length > 0;
+  carousel.classList.toggle('hidden', !hasDeals);
+  emptyState.classList.toggle('hidden', hasDeals);
+  if (!hasDeals) return;
+
+  dealSlideIndex = (dealSlideIndex + state.deals.length) % state.deals.length;
+  const product = state.deals[dealSlideIndex];
+  const image = document.getElementById('deal-image');
+  image.src = product.images?.[0] || '';
+  image.alt = product.title;
+  document.getElementById('deal-product-button').setAttribute('aria-label', `View ${product.title}`);
+  document.getElementById('deal-brand').textContent = `${product.brand} · ${product.categorySlug.replaceAll('-', ' ')}`;
+  document.getElementById('deal-title').textContent = product.title;
+  document.getElementById('deal-description').textContent = product.description;
+  document.getElementById('deal-rating').textContent = product.rating.toFixed(1);
+  document.getElementById('deal-reviews').textContent = `(${product.reviewCount.toLocaleString('en-IN')} reviews)`;
+  document.getElementById('deal-price').textContent = `₹${product.price.toLocaleString('en-IN')}`;
+  document.getElementById('deal-original-price').textContent = `₹${product.originalPrice.toLocaleString('en-IN')}`;
+  document.getElementById('deal-discount').textContent = `${product.discountPercentage}% OFF`;
+  document.getElementById('deal-image-badge').textContent = `${product.discountPercentage}% OFF`;
+  document.getElementById('deal-dots').innerHTML = state.deals.map((deal, index) => `
+    <button type="button" aria-label="Show deal ${index + 1}: ${deal.title}" aria-current="${index === dealSlideIndex}" onclick="setDealSlide(${index})"></button>
+  `).join('');
+  initLucide();
+}
+
+function setDealSlide(index) {
+  if (!state.deals.length) return;
+  dealSlideIndex = (index + state.deals.length) % state.deals.length;
+  renderDealsCarousel();
+}
+
+function changeDealSlide(direction) {
+  setDealSlide(dealSlideIndex + direction);
+}
+
+function openCurrentDeal() {
+  const product = state.deals[dealSlideIndex];
+  if (product) openProductModal(product.id);
+}
+
+function addCurrentDealToCart(event) {
+  const product = state.deals[dealSlideIndex];
+  if (product) quickAddToCart(product.id, event);
+}
+
+function syncDealsCarouselAutoplay() {
+  if (dealRotationTimer) {
+    clearInterval(dealRotationTimer);
+    dealRotationTimer = null;
+  }
+  if (state.deals.length < 2 || dealPointerPaused || dealFocusPaused || document.hidden || state.currentView !== 'home') return;
+  dealRotationTimer = setInterval(() => setDealSlide(dealSlideIndex + 1), 5000);
+}
+
+function setupDealsCarousel() {
+  const carousel = document.getElementById('deals-carousel');
+  if (!carousel || dealsCarouselReady) return;
+  dealsCarouselReady = true;
+  carousel.addEventListener('pointerenter', () => {
+    dealPointerPaused = true;
+    syncDealsCarouselAutoplay();
+  });
+  carousel.addEventListener('pointerleave', () => {
+    dealPointerPaused = false;
+    syncDealsCarouselAutoplay();
+  });
+  carousel.addEventListener('focusin', () => {
+    dealFocusPaused = true;
+    syncDealsCarouselAutoplay();
+  });
+  carousel.addEventListener('focusout', (event) => {
+    if (!carousel.contains(event.relatedTarget)) {
+      dealFocusPaused = false;
+      syncDealsCarouselAutoplay();
+    }
+  });
+  document.addEventListener('visibilitychange', syncDealsCarouselAutoplay);
+  syncDealsCarouselAutoplay();
 }
 
 // Render product card matching the visual screenshot mockup
@@ -273,10 +463,33 @@ function renderProductGrid(elementId, products) {
   if (!container) return;
 
   if (products.length === 0) {
+    const emptyStates = {
+      'deals-product-grid': {
+        title: 'No live deals right now',
+        message: 'Explore the catalog and check back for the next offer.',
+        action: `<button onclick="navigate('shop')" class="empty-state-action">Explore all tech</button>`
+      },
+      'shop-product-grid': {
+        title: 'No products match these filters',
+        message: 'Try a wider price range or clear your filters to see more products.',
+        action: `<button onclick="resetFilters()" class="empty-state-action">Clear filters</button>`
+      },
+      'wishlist-product-grid': {
+        title: 'Your wishlist is empty',
+        message: 'Save a product with the heart button and it will show up here.',
+        action: `<button onclick="navigate('shop')" class="empty-state-action">Browse products</button>`
+      }
+    };
+    const emptyState = emptyStates[elementId] || {
+      title: 'No products to show yet',
+      message: 'Check back soon for more products.'
+    };
     container.innerHTML = `
-      <div class="col-span-full py-12 text-center text-slate-400">
-        <i data-lucide="package-search" class="w-12 h-12 mx-auto mb-2 text-slate-300"></i>
-        <p class="font-medium text-sm">No products found matching criteria</p>
+      <div class="col-span-full empty-state">
+        <span class="empty-state-icon"><i data-lucide="package-search" class="w-6 h-6"></i></span>
+        <h3>${emptyState.title}</h3>
+        <p>${emptyState.message}</p>
+        ${emptyState.action || ''}
       </div>
     `;
     initLucide();
@@ -295,7 +508,7 @@ function renderProductGrid(elementId, products) {
         ${discountTag}
         
         <!-- Wishlist toggle -->
-        <button onclick="toggleWishlist('${prod.id}', event)" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 transition shadow-xs z-10">
+        <button onclick="toggleWishlist('${prod.id}', event)" aria-label="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}" aria-pressed="${isWishlisted}" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 transition shadow-xs z-10">
           <i data-lucide="heart" class="w-4 h-4 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}"></i>
         </button>
 
@@ -331,7 +544,7 @@ function renderProductGrid(elementId, products) {
           : ''
         }
               </div>
-              <button onclick="quickAddToCart('${prod.id}', event)" class="p-2 rounded-xl bg-brand-50 hover:bg-brand-600 text-brand-600 hover:text-white transition shadow-2xs" title="Add to Cart">
+              <button onclick="quickAddToCart('${prod.id}', event)" class="p-2 rounded-xl bg-brand-50 hover:bg-brand-600 text-brand-600 hover:text-white transition shadow-2xs" title="Add to Cart" aria-label="Add item to cart">
                 <i data-lucide="plus" class="w-4 h-4"></i>
               </button>
             </div>
@@ -347,6 +560,30 @@ function renderProductGrid(elementId, products) {
 }
 
 // ==================== SHOP FILTERING & PAGINATION (DL-BUG-006) ====================
+function syncCatalogQuickFilters() {
+  document.querySelectorAll('[data-category-quick]').forEach((button) => {
+    const active = button.dataset.categoryQuick === state.filters.category;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+
+  const activeFilterCount = [
+    state.filters.category !== 'all',
+    Boolean(state.filters.brand),
+    Boolean(state.filters.minPrice),
+    Boolean(state.filters.maxPrice),
+    Boolean(state.filters.minRating),
+    state.filters.inStockOnly,
+    state.filters.isFlashSale
+  ].filter(Boolean).length;
+  const countEl = document.getElementById('active-filter-count');
+  const hintEl = document.querySelector('.catalog-filter-hint');
+  if (countEl) countEl.textContent = activeFilterCount;
+  if (hintEl) hintEl.textContent = activeFilterCount
+    ? `${activeFilterCount} filter${activeFilterCount === 1 ? '' : 's'} applied`
+    : 'Category, brand, price and availability';
+}
+
 async function fetchShopProducts() {
   const queryParams = new URLSearchParams();
   if (state.filters.category && state.filters.category !== 'all') queryParams.set('category', state.filters.category);
@@ -393,6 +630,7 @@ function triggerFilterUpdate() {
   state.filters.isFlashSale = document.getElementById('filter-flashsale').checked;
   state.filters.sort = document.getElementById('sort-select').value;
   state.filters.page = 1; // Reset to page 1 on filter change
+  syncCatalogQuickFilters();
   fetchShopProducts();
 }
 
@@ -417,6 +655,7 @@ function filterByCategory(slug) {
   state.filters.category = slug;
   const select = document.getElementById('filter-category');
   if (select) select.value = slug;
+  syncCatalogQuickFilters();
   navigate('shop');
 }
 
@@ -448,7 +687,7 @@ function handleSearchInput(e) {
         return; // Discard stale response
       }
 
-      renderSearchResults(data.results || [], query);
+      renderSearchResults(data.results || [], data.query || query);
     } catch (err) {
       console.error('Search request failed', err);
     }
@@ -459,8 +698,16 @@ function renderSearchResults(results, query) {
   const dropdown = document.getElementById('search-results-dropdown');
   if (!dropdown) return;
 
+  const headerHtml = `
+    <div class="px-3.5 py-2 bg-slate-50/95 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+      <span>Search results for: <b class="text-brand-600 font-bold">"${query}"</b></span>
+      <span class="text-[11px] text-slate-400 font-mono">${results.length} item${results.length === 1 ? '' : 's'}</span>
+    </div>
+  `;
+
   if (results.length === 0) {
     dropdown.innerHTML = `
+      ${headerHtml}
       <div class="p-4 text-center text-xs text-slate-500">
         No matching products for "<b class="text-slate-800">${query}</b>"
       </div>
@@ -469,7 +716,7 @@ function renderSearchResults(results, query) {
     return;
   }
 
-  dropdown.innerHTML = results
+  dropdown.innerHTML = headerHtml + results
     .slice(0, 6)
     .map(
       (prod) => `
@@ -520,8 +767,11 @@ async function openProductModal(productId) {
     if (product.stock > 0) {
       stockEl.textContent = `In Stock (${product.stock} units available)`;
       stockEl.className = 'font-bold text-emerald-600';
+    } else if (product.stock < 0) {
+      stockEl.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-100 text-rose-800 font-extrabold border border-rose-300 text-xs">⚠️ DEFECT: OVERSOLD (${product.stock} Units - Negative Inventory)</span>`;
+      stockEl.className = 'font-bold';
     } else {
-      stockEl.textContent = 'Out of Stock';
+      stockEl.textContent = 'Out of Stock (0 units)';
       stockEl.className = 'font-bold text-rose-600';
     }
 
@@ -918,6 +1168,132 @@ async function continueToOrderResult() {
   navigate('profile');
 }
 
+let appDialogResolve = null;
+let appDialogPreviousFocus = null;
+
+function showAppDialog(options = {}) {
+  const overlay = document.getElementById('app-dialog');
+  const title = document.getElementById('app-dialog-title');
+  const message = document.getElementById('app-dialog-message');
+  const icon = document.getElementById('app-dialog-icon');
+  const field = document.getElementById('app-dialog-field');
+  const label = document.getElementById('app-dialog-label');
+  const input = document.getElementById('app-dialog-input');
+  const textarea = document.getElementById('app-dialog-textarea');
+  const error = document.getElementById('app-dialog-error');
+  const cancel = document.getElementById('app-dialog-cancel');
+  const confirm = document.getElementById('app-dialog-confirm');
+  if (!overlay) return Promise.resolve(false);
+
+  const hasInput = Boolean(options.input);
+  const useTextarea = options.input?.type === 'textarea';
+  appDialogPreviousFocus = document.activeElement;
+  overlay.dataset.tone = options.tone || 'neutral';
+  icon.innerHTML = `<i data-lucide="${options.tone === 'danger' ? 'triangle-alert' : hasInput ? 'message-square-text' : 'circle-help'}" class="w-5 h-5" aria-hidden="true"></i>`;
+  initLucide();
+  title.textContent = options.title || 'Please confirm';
+  message.textContent = options.message || '';
+  cancel.textContent = options.cancelLabel || 'Go back';
+  confirm.textContent = options.confirmLabel || 'Confirm';
+  field.classList.toggle('hidden', !hasInput);
+  error.classList.add('hidden');
+  error.textContent = '';
+  input.classList.toggle('hidden', !hasInput || useTextarea);
+  textarea.classList.toggle('hidden', !hasInput || !useTextarea);
+
+  const activeField = useTextarea ? textarea : input;
+  if (hasInput) {
+    label.textContent = options.input.label || 'Details';
+    label.htmlFor = activeField.id;
+    activeField.value = options.input.value ?? '';
+    activeField.placeholder = options.input.placeholder || '';
+    if (activeField === input) input.type = options.input.type || 'text';
+    activeField.min = options.input.min ?? '';
+    activeField.max = options.input.max ?? '';
+    if (activeField === input) input.step = options.input.step ?? (options.input.type === 'number' ? '1' : '');
+    activeField.inputMode = options.input.inputMode || '';
+  }
+
+  return new Promise((resolve) => {
+    appDialogResolve = resolve;
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => (hasInput ? activeField : cancel).focus());
+  });
+}
+
+function closeAppDialog(result = false) {
+  const overlay = document.getElementById('app-dialog');
+  overlay?.classList.add('hidden');
+  overlay?.setAttribute('aria-hidden', 'true');
+  if (appDialogResolve) {
+    const resolve = appDialogResolve;
+    appDialogResolve = null;
+    resolve(result);
+  }
+  if (appDialogPreviousFocus?.isConnected) appDialogPreviousFocus.focus();
+  appDialogPreviousFocus = null;
+}
+
+function submitAppDialog(event) {
+  event.preventDefault();
+  const field = document.getElementById('app-dialog-field');
+  if (field.classList.contains('hidden')) {
+    closeAppDialog(true);
+    return;
+  }
+
+  const input = document.getElementById('app-dialog-input');
+  const textarea = document.getElementById('app-dialog-textarea');
+  const activeField = textarea.classList.contains('hidden') ? input : textarea;
+  const error = document.getElementById('app-dialog-error');
+  const value = activeField.value.trim();
+  const min = activeField.min === '' ? null : Number(activeField.min);
+  const numericValue = activeField.type === 'number' ? Number(value) : null;
+  let errorMessage = '';
+
+  if (!value) errorMessage = 'Enter a value to continue.';
+  else if (activeField.type === 'number' && (!Number.isInteger(numericValue) || (min !== null && numericValue < min))) {
+    errorMessage = min === null ? 'Enter a whole number.' : `Enter a whole number of at least ${min}.`;
+  }
+
+  if (errorMessage) {
+    error.textContent = errorMessage;
+    error.classList.remove('hidden');
+    activeField.focus();
+    return;
+  }
+  closeAppDialog(value);
+}
+
+function handleAppDialogBackdrop(event) {
+  if (event.target === event.currentTarget) closeAppDialog(false);
+}
+
+function handleAppDialogKeydown(event) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeAppDialog(false);
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const controls = [...event.currentTarget.querySelectorAll('button:not([disabled]), input:not(.hidden), textarea:not(.hidden)')];
+  if (!controls.length) return;
+  const first = controls[0];
+  const last = controls[controls.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function showAppConfirm(options) {
+  return showAppDialog(options);
+}
+
 // ==================== CUSTOMER PROFILE & ORDERS ====================
 async function loadCustomerOrders() {
   try {
@@ -1005,7 +1381,14 @@ function getOrderStatusBadgeClass(status) {
 }
 
 async function cancelOrder(orderId) {
-  if (!confirm('Are you sure you want to cancel this order?')) return;
+  const confirmed = await showAppConfirm({
+    title: 'Cancel this order?',
+    message: 'This order will be marked as cancelled. Do you want to continue?',
+    confirmLabel: 'Cancel order',
+    cancelLabel: 'Keep order',
+    tone: 'danger'
+  });
+  if (!confirmed) return;
   try {
     const res = await fetch(`/api/orders/${orderId}/cancel`, {
       method: 'POST',
@@ -1022,7 +1405,13 @@ async function cancelOrder(orderId) {
 }
 
 async function requestRefund(orderId) {
-  const reason = prompt('Please enter the reason for your refund/return:');
+  const reason = await showAppDialog({
+    title: 'Request a return or refund',
+    message: 'Tell us briefly why you are requesting a return or refund.',
+    confirmLabel: 'Submit request',
+    cancelLabel: 'Go back',
+    input: { type: 'textarea', label: 'Reason', placeholder: 'Enter your reason' }
+  });
   if (!reason) return;
   try {
     const res = await fetch(`/api/orders/${orderId}/refund`, {
@@ -1067,7 +1456,7 @@ async function loadSellerDashboard() {
           <td class="py-3 px-4 uppercase text-xs">${p.categorySlug}</td>
           <td class="py-3 px-4 font-bold tabular-nums">₹${p.price.toLocaleString('en-IN')}</td>
           <td class="py-3 px-4 font-bold ${p.stock < 15 ? 'text-rose-600' : 'text-emerald-600'} tabular-nums">
-            ${p.stock} units
+            ${p.stock < 0 ? `<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 font-black">⚠️ OVERSOLD (${p.stock})</span>` : `${p.stock} units`}
           </td>
           <td class="py-3 px-4 text-right">
             <button onclick="editProductStock('${p.id}', ${p.stock})" class="text-xs font-semibold text-brand-600 hover:underline mr-3">Edit Stock</button>
@@ -1084,8 +1473,14 @@ async function loadSellerDashboard() {
 }
 
 async function editProductStock(productId, currentStock) {
-  const newStock = prompt(`Update inventory stock for product:`, currentStock);
-  if (newStock === null) return;
+  const newStock = await showAppDialog({
+    title: 'Update inventory',
+    message: 'Set the available stock for this product.',
+    confirmLabel: 'Save stock',
+    cancelLabel: 'Go back',
+    input: { type: 'number', label: 'Units in stock', value: currentStock, min: 0, inputMode: 'numeric' }
+  });
+  if (newStock === false) return;
   try {
     const res = await fetch(`/api/seller/products/${productId}`, {
       method: 'PUT',
@@ -1102,7 +1497,14 @@ async function editProductStock(productId, currentStock) {
 }
 
 async function deleteSellerProduct(productId) {
-  if (!confirm('Are you sure you want to delete this product?')) return;
+  const confirmed = await showAppConfirm({
+    title: 'Remove this product?',
+    message: 'This product will be removed from your catalog.',
+    confirmLabel: 'Remove product',
+    cancelLabel: 'Keep product',
+    tone: 'danger'
+  });
+  if (!confirmed) return;
   try {
     const res = await fetch(`/api/seller/products/${productId}`, { method: 'DELETE' });
     if (res.ok) {
@@ -1200,17 +1602,26 @@ function toggleWishlist(productId, event) {
 function renderWishlist() {
   const wishlistProducts = state.products.filter((p) => state.wishlist.includes(p.id));
   renderProductGrid('wishlist-product-grid', wishlistProducts);
+  const recommendations = document.getElementById('wishlist-recommendations');
+  const recommendationProducts = state.trending.filter((p) => !state.wishlist.includes(p.id)).slice(0, 4);
+  if (recommendations) recommendations.classList.toggle('hidden', wishlistProducts.length > 0 || recommendationProducts.length === 0);
+  if (recommendationProducts.length) renderProductGrid('wishlist-recommendations-grid', recommendationProducts);
 }
 
 // ==================== UI HELPERS & MODALS ====================
-function toggleCategoryMenu() {
-  const menu = document.getElementById('category-dropdown-menu');
-  if (menu) menu.classList.toggle('hidden');
+function closeHeaderMenus(restoreFocus = false) {
+  document.getElementById('user-dropdown-menu')?.classList.add('hidden');
+  document.getElementById('user-menu-btn')?.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) document.getElementById('user-menu-btn')?.focus();
 }
 
 function toggleUserMenu() {
   const menu = document.getElementById('user-dropdown-menu');
-  if (menu) menu.classList.toggle('hidden');
+  if (!menu) return;
+  const open = menu.classList.contains('hidden');
+  closeHeaderMenus();
+  menu.classList.toggle('hidden', !open);
+  document.getElementById('user-menu-btn')?.setAttribute('aria-expanded', String(open));
 }
 
 function openAuthModal() {
@@ -1328,3 +1739,57 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
+
+// ==================== BUG-03 VISUAL CONCURRENCY SIMULATOR ====================
+// Call in Browser Console (F12) via: simulateConcurrentCheckouts()
+window.simulateConcurrentCheckouts = async function (productId = 'prod-cam-06') {
+  showToast('Simulating 2 concurrent flash-sale checkouts at the same millisecond...', 'warning');
+  try {
+    // 1. Set product stock to 1 via seller API to simulate last item in flash sale
+    await fetch(`/api/seller/products/${productId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock: 1 })
+    });
+
+    const payload = {
+      items: [{ productId, quantity: 1 }],
+      addressId: 'addr-demo-1',
+      paymentMethod: 'upi'
+    };
+
+    // 2. Fire 2 checkout requests concurrently with Promise.all
+    const [res1, res2] = await Promise.all([
+      fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, idempotencyKey: 'c1-' + Date.now() })
+      }),
+      fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, idempotencyKey: 'c2-' + Date.now() })
+      })
+    ]);
+
+    const order1 = await res1.json();
+    const order2 = await res2.json();
+
+    // 3. Check resulting inventory in database
+    const verifyRes = await fetch(`/api/products/${productId}`);
+    const verifyData = await verifyRes.json();
+    const finalStock = verifyData.product.stock;
+
+    if (finalStock < 0) {
+      showToast(`⚠️ DL-BUG-003 DETECTED: Stock dropped to ${finalStock} units (Oversold!)`, 'error');
+    } else {
+      showToast(`✓ PROTECTED: Stock safely handled, remaining: ${finalStock} units`, 'success');
+    }
+
+    // Open modal to visually inspect the negative inventory badge on screen
+    openProductModal(productId);
+    return { order1, order2, finalStock };
+  } catch (err) {
+    showToast('Simulation error: ' + err.message, 'error');
+  }
+};

@@ -19,10 +19,9 @@ searchRouter.get('/', async (req, res) => {
   }
 
   // Artificial latency simulation to reproduce race condition when "laptop" is queried before "mobile"
-  // In Challenge Mode, specific queries have varied delay to test race condition
+  // In Challenge Mode, "laptop" has a 3500ms (3.5s) delay so anyone can comfortably test it in the UI
   if (!config.isReferenceMode && q.toLowerCase() === 'laptop') {
-    // Slower query to allow subsequent "mobile" query to return earlier
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 3500));
   }
 
   const lowerQ = q.toLowerCase();

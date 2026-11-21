@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FlashCart — Everyday Tech for a Smarter You</title>
+  <meta name="theme-color" content="#eaf1ec">
+  <meta name="description" content="Discover everyday tech, limited-time offers, and fast delivery across India with FlashCart.">
+  <title>FlashCart — Everyday tech, better buys</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -30,7 +32,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen relative">
+<body class="text-slate-900 flex flex-col min-h-screen relative">
 
   <!-- Ambient glowing decorative backgrounds -->
   <div class="ambient-glow-1"></div>
@@ -51,18 +53,6 @@
         </span>
       </div>
 
-      <!-- Category Dropdown Button -->
-      <div class="relative hidden md:block">
-        <button id="category-dropdown-btn" onclick="toggleCategoryMenu()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white/80 hover:bg-white text-slate-700 text-sm font-semibold hover:border-slate-300 transition shadow-xs">
-          <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
-          <span>All Categories</span>
-          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
-        </button>
-        <div id="category-dropdown-menu" class="hidden absolute left-0 mt-2 w-60 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 py-2 z-50">
-          <!-- Dynamic category list -->
-        </div>
-      </div>
-
       <!-- Search Bar with Ctrl+K -->
       <div class="flex-1 max-w-xl relative">
         <div class="relative">
@@ -70,6 +60,7 @@
           <input 
             type="text" 
             id="global-search-input"
+            aria-label="Search products"
             placeholder="Search for products, brands and more..." 
             class="w-full pl-10 pr-16 py-2.5 rounded-full border border-slate-200 bg-slate-50/90 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm transition shadow-xs"
             oninput="handleSearchInput(event)"
@@ -88,20 +79,20 @@
       <div class="flex items-center space-x-2 md:space-x-4">
         
         <!-- Wishlist -->
-        <button onclick="navigate('wishlist')" class="p-2.5 text-slate-600 hover:text-brand-600 hover:bg-slate-100/80 rounded-full relative transition" title="Wishlist">
+        <button onclick="navigate('wishlist')" class="p-2.5 text-slate-600 hover:text-brand-600 hover:bg-slate-100/80 rounded-full relative transition" title="Wishlist" aria-label="Wishlist">
           <i data-lucide="heart" class="w-5 h-5"></i>
           <span id="wishlist-badge" class="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
         </button>
 
         <!-- Cart Button -->
-        <button onclick="toggleCartDrawer()" class="p-2.5 text-slate-600 hover:text-brand-600 hover:bg-slate-100/80 rounded-full relative transition flex items-center gap-1.5" title="Cart">
+        <button onclick="toggleCartDrawer()" class="p-2.5 text-slate-600 hover:text-brand-600 hover:bg-slate-100/80 rounded-full relative transition flex items-center gap-1.5" title="Cart" aria-label="Shopping cart">
           <i data-lucide="shopping-cart" class="w-5 h-5"></i>
           <span id="cart-badge" class="absolute top-1 right-1 w-4 h-4 bg-brand-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
         </button>
 
         <!-- User / Role Switcher -->
         <div class="relative">
-          <button id="user-menu-btn" onclick="toggleUserMenu()" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-slate-200 bg-white/80 hover:bg-white text-slate-700 text-sm font-semibold transition shadow-xs">
+          <button id="user-menu-btn" onclick="toggleUserMenu()" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-slate-200 bg-white/80 hover:bg-white text-slate-700 text-sm font-semibold transition shadow-xs" aria-label="Account menu">
             <div id="user-avatar" class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs">
               U
             </div>
@@ -160,7 +151,7 @@
     <div class="border-t border-slate-100 px-4 bg-white/70 backdrop-blur-md hidden sm:block">
       <div class="max-w-7xl mx-auto flex items-center justify-between text-sm">
         <nav class="flex space-x-8 font-semibold">
-          <a href="#" onclick="navigate('home'); return false;" id="nav-home" class="py-2.5 text-brand-600 border-b-2 border-brand-600 transition">Home</a>
+          <a href="#" onclick="navigate('home'); return false;" id="nav-home" aria-current="page" class="py-2.5 text-brand-600 border-b-2 border-brand-600 transition">Home</a>
           <a href="#" onclick="navigate('shop'); return false;" id="nav-shop" class="py-2.5 text-slate-600 hover:text-brand-600 transition">Shop</a>
           <a href="#" onclick="navigate('deals'); return false;" id="nav-deals" class="py-2.5 text-slate-600 hover:text-brand-600 transition">Deals</a>
           <a href="#" onclick="navigate('shop', { filter: 'newest' }); return false;" class="py-2.5 text-slate-600 hover:text-brand-600 transition">New Arrivals</a>
@@ -169,7 +160,7 @@
         </nav>
         <div class="text-xs text-slate-500 flex items-center gap-2">
           <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>DEBUG//LAB Runtime ID: <b class="text-slate-800">DL-APP-001</b></span>
+          <span>Delivery across India</span>
         </div>
       </div>
     </div>
@@ -194,91 +185,66 @@
             <!-- Left Copy -->
             <div class="lg:col-span-6 space-y-5 z-10">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-slate-200 text-xs font-bold text-slate-800 shadow-xs">
-                <span class="tracking-widest uppercase text-brand-600 font-extrabold text-[11px]">WINTER COLLECTION 2026</span>
-                <span class="text-slate-300">—</span>
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+                <span class="tracking-widest uppercase text-brand-600 font-extrabold text-[11px]">The FlashCart edit</span>
               </div>
               <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.08] tracking-tight">
-                Everyday Tech<br/>for a <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600">Smarter You</span>
+                Better tech.<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600">Better buys.</span>
               </h1>
               <p class="text-slate-600 text-base sm:text-lg max-w-lg leading-relaxed">
-                Laptops, accessories, wearables and more — now at unbeatable prices.
+                The devices you want, at prices that make upgrading easy.
               </p>
               
               <!-- Action Buttons -->
               <div class="flex flex-wrap items-center gap-4 pt-2">
                 <button onclick="navigate('shop')" class="px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-500/25 flex items-center gap-2 transition transform active:scale-95">
-                  <span>Shop Now</span>
+                  <span>Shop all tech</span>
                   <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
                 <button onclick="navigate('shop', { isFlashSale: true })" class="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm border border-slate-200 transition shadow-xs">
-                  Explore Collections
+                  Shop today’s deals
                 </button>
               </div>
 
-              <!-- Value Props Strip (Matching Screenshot) -->
-              <div class="grid grid-cols-3 gap-2 pt-6 border-t border-slate-200/90 text-xs text-slate-600">
-                <div class="flex items-center gap-2.5">
-                  <div class="p-2 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-xs">
-                    <i data-lucide="truck" class="w-4 h-4"></i>
-                  </div>
-                  <div>
-                    <p class="font-bold text-slate-800">Free Delivery</p>
-                    <p class="text-[11px] text-slate-500">above ₹999</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <div class="p-2 rounded-xl bg-white border border-slate-200 text-emerald-600 shadow-xs">
-                    <i data-lucide="shield-check" class="w-4 h-4"></i>
-                  </div>
-                  <div>
-                    <p class="font-bold text-slate-800">Secure Payments</p>
-                    <p class="text-[11px] text-slate-500">100% Protected</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2.5">
-                  <div class="p-2 rounded-xl bg-white border border-slate-200 text-brand-600 shadow-xs">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                  </div>
-                  <div>
-                    <p class="font-bold text-slate-800">Easy Returns</p>
-                    <p class="text-[11px] text-slate-500">7-Day Policy</p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <!-- Right Hero Visual Showcase (Matching composite showcase in mockup) -->
-            <div class="lg:col-span-6 relative flex justify-center items-center">
+            <div id="home-hero-carousel" class="lg:col-span-6 relative flex justify-center items-center" role="region" aria-roledescription="carousel" aria-label="Featured products">
               
               <!-- Carousel left arrow button -->
-              <button class="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 border border-slate-200 shadow-md flex items-center justify-center text-slate-600 hover:text-slate-900 transition z-20">
+              <button type="button" onclick="changeHeroSlide(-1)" aria-label="Previous featured product" class="home-hero-arrow absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 border border-slate-200 shadow-md flex items-center justify-center text-slate-600 hover:text-slate-900 transition z-20">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
               </button>
 
               <!-- Main Hero Composite Stage -->
               <div class="relative w-full max-w-lg aspect-[16/11] rounded-3xl overflow-hidden glass-panel p-2 shadow-2xl border border-slate-200/90">
-                <img 
-                  src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&auto=format&fit=crop&q=80" 
-                  alt="Winter Tech Collection" 
-                  class="w-full h-full object-cover rounded-2xl"
+                <img id="home-hero-image"
+                  src="images/motorola-edge-50-ultra.jpg"
+                  alt="Motorola Edge 50 Ultra smartphone, shown front and back"
+                  role="button"
+                  tabindex="0"
+                  aria-label="View Motorola Edge 50 Ultra"
+                  onclick="openHeroProduct()"
+                  onkeydown="openHeroProductFromKey(event)"
+                  class="home-hero-product w-full h-full object-cover rounded-2xl cursor-pointer"
                 />
 
                 <!-- Floating tech badges on the hero image -->
                 <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-100 shadow-sm flex items-center gap-1.5 text-xs font-bold text-slate-800">
                   <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Flash Sale Live</span>
+                  <span id="home-hero-badge">Flash Sale Live</span>
                 </div>
 
                 <!-- Carousel pagination dots -->
-                <div class="absolute bottom-4 right-6 flex items-center gap-1.5 z-20">
-                  <span class="w-4 h-1.5 rounded-full bg-brand-600"></span>
-                  <span class="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                  <span class="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                <div id="home-hero-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20" role="group" aria-label="Choose featured product">
+                  <button type="button" data-hero-slide="0" aria-label="Show featured product 1" aria-current="true" onclick="setHeroSlide(0)" class="w-5 h-2 rounded-full bg-brand-600"></button>
+                  <button type="button" data-hero-slide="1" aria-label="Show featured product 2" aria-current="false" onclick="setHeroSlide(1)" class="w-2 h-2 rounded-full bg-white/80"></button>
+                  <button type="button" data-hero-slide="2" aria-label="Show featured product 3" aria-current="false" onclick="setHeroSlide(2)" class="w-2 h-2 rounded-full bg-white/80"></button>
                 </div>
               </div>
 
               <!-- Carousel right arrow button -->
-              <button class="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 border border-slate-200 shadow-md flex items-center justify-center text-slate-600 hover:text-slate-900 transition z-20">
+              <button type="button" onclick="changeHeroSlide(1)" aria-label="Next featured product" class="home-hero-arrow absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/95 border border-slate-200 shadow-md flex items-center justify-center text-slate-600 hover:text-slate-900 transition z-20">
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
               </button>
 
@@ -288,9 +254,28 @@
         </div>
       </section>
 
-      <!-- CATEGORY PILLS BAR (Exact icons & pills from screenshot) -->
-      <section class="max-w-7xl mx-auto px-4">
-        <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none text-slate-700 text-xs sm:text-sm font-semibold">
+      <section class="service-benefits max-w-7xl mx-auto px-4" aria-label="Shopping benefits">
+        <article class="service-benefit">
+          <span class="service-benefit-icon"><i data-lucide="truck" class="w-5 h-5" aria-hidden="true"></i></span>
+          <span><strong>Free delivery</strong><small>Orders ₹999+</small></span>
+        </article>
+        <article class="service-benefit">
+          <span class="service-benefit-icon"><i data-lucide="shield-check" class="w-5 h-5" aria-hidden="true"></i></span>
+          <span><strong>Secure pay</strong><small>Protected checkout</small></span>
+        </article>
+        <article class="service-benefit">
+          <span class="service-benefit-icon"><i data-lucide="rotate-ccw" class="w-5 h-5" aria-hidden="true"></i></span>
+          <span><strong>Easy returns</strong><small>7-day policy</small></span>
+        </article>
+      </section>
+
+      <!-- Category shortcuts sit below the hero and shopping benefits. -->
+      <section class="home-category-section max-w-7xl mx-auto px-4" aria-labelledby="home-category-title">
+        <div class="home-category-heading">
+          <div><p>Explore by interest</p><h2 id="home-category-title">Shop by category</h2></div>
+          <span>Find something for every day</span>
+        </div>
+        <div class="home-category-chips flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none text-slate-700 text-xs sm:text-sm font-semibold">
           <button onclick="filterByCategory('mobiles')" class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 hover:border-brand-500 hover:text-brand-600 hover:shadow-xs transition whitespace-nowrap shadow-2xs">
             <i data-lucide="smartphone" class="w-4 h-4 text-slate-400"></i> Mobiles
           </button>
@@ -314,9 +299,6 @@
           </button>
           <button onclick="filterByCategory('fashion')" class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 hover:border-brand-500 hover:text-brand-600 hover:shadow-xs transition whitespace-nowrap shadow-2xs">
             <i data-lucide="shirt" class="w-4 h-4 text-slate-400"></i> Fashion
-          </button>
-          <button onclick="filterByCategory('all')" class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-brand-50 border border-brand-200 text-brand-600 font-bold transition whitespace-nowrap shadow-2xs">
-            <i data-lucide="layout-grid" class="w-4 h-4"></i> All Categories
           </button>
         </div>
       </section>
@@ -349,32 +331,33 @@
             </div>
           </div>
 
-          <!-- Deals Grid with the 4 Deals Cards + 5th Winter Essentials Banner (Matching Screenshot) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 items-stretch">
-            
-            <!-- Cards 1-4: Rendered dynamically into this container -->
-            <div id="deals-product-grid" class="contents">
-              <!-- Injected by app.js: 4 cards with 42% OFF, 38% OFF, 50% OFF, 45% OFF -->
-            </div>
-
-            <!-- Card 5 (Right Side): "New Season Winter Essentials" Banner from Mockup -->
-            <div class="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-700 via-purple-700 to-indigo-900 text-white p-5 flex flex-col justify-between shadow-md cursor-pointer transition hover:scale-[1.02]" onclick="navigate('shop')">
-              <img 
-                src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80" 
-                alt="Snowy Mountains" 
-                class="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40 group-hover:scale-110 transition duration-700"
-              />
-              <div class="relative z-10 space-y-1">
-                <span class="text-[11px] font-bold text-indigo-200 uppercase tracking-widest">New Season</span>
-                <h3 class="text-xl font-black leading-tight text-white">Winter<br/>Essentials</h3>
-              </div>
-              <div class="relative z-10 pt-8 flex justify-end">
-                <div class="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white group-hover:bg-white group-hover:text-slate-900 transition">
-                  <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </div>
+          <div id="deals-carousel" class="deals-carousel hidden" role="region" aria-roledescription="carousel" aria-label="Deals of the day">
+            <div class="deals-copy">
+              <p class="deals-kicker">Today’s featured deal</p>
+              <p id="deal-brand" class="deals-brand"></p>
+              <h3 id="deal-title"></h3>
+              <p id="deal-description" class="deals-description"></p>
+              <div class="deals-rating"><span><i data-lucide="star" class="w-4 h-4" aria-hidden="true"></i><span id="deal-rating"></span></span><small id="deal-reviews"></small></div>
+              <div class="deals-price-line"><strong id="deal-price"></strong><del id="deal-original-price"></del><span id="deal-discount"></span></div>
+              <div class="deals-actions">
+                <button type="button" onclick="openCurrentDeal()">Shop this deal<i data-lucide="arrow-right" class="w-4 h-4" aria-hidden="true"></i></button>
+                <button type="button" onclick="addCurrentDealToCart(event)"><i data-lucide="shopping-bag" class="w-4 h-4" aria-hidden="true"></i>Add to cart</button>
               </div>
             </div>
-
+            <div class="deals-visual">
+              <button type="button" class="deals-arrow deals-previous" onclick="changeDealSlide(-1)" aria-label="Previous deal"><i data-lucide="chevron-left" class="w-5 h-5" aria-hidden="true"></i></button>
+              <button id="deal-product-button" type="button" class="deals-product-button" onclick="openCurrentDeal()" aria-label="Open featured deal">
+                <img id="deal-image" src="" alt="">
+              </button>
+              <span id="deal-image-badge" class="deals-image-badge"></span>
+              <div id="deal-dots" class="deals-dots" role="group" aria-label="Choose a deal"></div>
+              <button type="button" class="deals-arrow deals-next" onclick="changeDealSlide(1)" aria-label="Next deal"><i data-lucide="chevron-right" class="w-5 h-5" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <div id="deals-empty" class="deals-empty">
+            <span><i data-lucide="package-search" class="w-7 h-7" aria-hidden="true"></i></span>
+            <h3>No live deals right now</h3>
+            <p>Check back soon for today’s featured offers.</p>
           </div>
 
         </div>
@@ -387,7 +370,7 @@
             <h2 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
               <i data-lucide="flame" class="w-6 h-6 text-amber-500"></i> Trending Top Picks
             </h2>
-            <p class="text-xs sm:text-sm text-slate-500">Ranked by Priority Queue Max-Heap algorithm</p>
+            <p class="text-xs sm:text-sm text-slate-500">Popular picks shoppers come back for</p>
           </div>
           <button onclick="navigate('shop')" class="text-xs sm:text-sm font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition">
             <span>Explore All</span>
@@ -434,45 +417,42 @@
     </div>
 
     <!-- ==================== SHOP / DISCOVERY VIEW ==================== -->
-    <div id="view-shop" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
-      
-      <!-- Breadcrumb & Header -->
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/90 pb-4">
+    <div id="view-shop" class="hidden max-w-7xl mx-auto px-4 py-8 catalog-page">
+      <div class="catalog-heading">
         <div>
-          <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Explore Catalog</h1>
-          <p id="catalog-count-label" class="text-xs text-slate-500 mt-1">Showing all products</p>
-        </div>
-
-        <!-- Sorting Selector -->
-        <div class="flex items-center gap-3">
-          <label class="text-xs text-slate-500 font-semibold">Sort By:</label>
-          <select id="sort-select" onchange="triggerFilterUpdate()" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold focus:ring-2 focus:ring-brand-500/20 focus:outline-none shadow-xs">
-            <option value="popularity">Popularity</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="rating">Customer Rating</option>
-            <option value="newest">Newest First</option>
-          </select>
+          <p class="catalog-eyebrow">The FlashCart edit</p>
+          <h1>Find your next upgrade</h1>
+          <p id="catalog-count-label" class="catalog-count">Discover tech for every day</p>
         </div>
       </div>
 
-      <!-- Shop Layout: Sidebar Filters + Products Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
-        <!-- Filters Sidebar -->
-        <aside class="space-y-6 bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/90 h-fit shadow-xs">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-600"></i> Filters
-            </h3>
-            <button onclick="resetFilters()" class="text-xs font-bold text-brand-600 hover:underline">Reset All</button>
-          </div>
+      <nav class="catalog-categories" aria-label="Browse by category">
+        <button type="button" class="catalog-category-chip is-active" data-category-quick="all" aria-pressed="true" onclick="filterByCategory('all')"><i data-lucide="layout-grid" class="w-4 h-4"></i> All tech</button>
+        <button type="button" class="catalog-category-chip" data-category-quick="mobiles" aria-pressed="false" onclick="filterByCategory('mobiles')"><i data-lucide="smartphone" class="w-4 h-4"></i> Mobiles</button>
+        <button type="button" class="catalog-category-chip" data-category-quick="laptops" aria-pressed="false" onclick="filterByCategory('laptops')"><i data-lucide="laptop" class="w-4 h-4"></i> Laptops</button>
+        <button type="button" class="catalog-category-chip" data-category-quick="audio" aria-pressed="false" onclick="filterByCategory('audio')"><i data-lucide="headphones" class="w-4 h-4"></i> Audio</button>
+        <button type="button" class="catalog-category-chip" data-category-quick="cameras" aria-pressed="false" onclick="filterByCategory('cameras')"><i data-lucide="camera" class="w-4 h-4"></i> Cameras</button>
+        <button type="button" class="catalog-category-chip" data-category-quick="wearables" aria-pressed="false" onclick="filterByCategory('wearables')"><i data-lucide="watch" class="w-4 h-4"></i> Wearables</button>
+        <button type="button" class="catalog-category-chip" data-category-quick="gaming" aria-pressed="false" onclick="filterByCategory('gaming')"><i data-lucide="gamepad-2" class="w-4 h-4"></i> Gaming</button>
+        <button type="button" class="catalog-category-chip catalog-deals-chip" onclick="navigate('deals')"><i data-lucide="zap" class="w-4 h-4"></i> Flash deals</button>
+      </nav>
 
-          <!-- Category Filter -->
-          <div class="space-y-2">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Category</label>
-            <select id="filter-category" onchange="triggerFilterUpdate()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50/80 focus:bg-white focus:outline-none font-medium">
-              <option value="all">All Categories</option>
+      <div class="catalog-toolbar">
+        <details class="catalog-filter-disclosure">
+          <summary aria-controls="shop-filters">
+            <span class="catalog-filter-title"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i> Refine results <span id="active-filter-count" class="catalog-filter-count" aria-live="polite">0</span></span>
+            <span class="catalog-filter-hint">Category, brand, price and availability</span>
+            <i data-lucide="chevron-down" class="catalog-filter-chevron w-4 h-4"></i>
+          </summary>
+          <aside id="shop-filters" aria-label="Product filters">
+          <div class="catalog-filter-head">
+            <p>Make it a better fit</p>
+            <button type="button" onclick="resetFilters()">Clear filters</button>
+          </div>
+          <div class="space-y-2 catalog-filter-category">
+            <label for="filter-category">Category</label>
+            <select id="filter-category" onchange="triggerFilterUpdate()">
+              <option value="all">All categories</option>
               <option value="mobiles">Mobiles</option>
               <option value="laptops">Laptops</option>
               <option value="audio">Audio</option>
@@ -483,72 +463,56 @@
               <option value="fashion">Fashion & Footwear</option>
             </select>
           </div>
-
-          <!-- Brand Filter -->
           <div class="space-y-2">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Brand</label>
-            <input 
-              type="text" 
-              id="filter-brand" 
-              placeholder="e.g. Apple, Sony, Nike" 
-              class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50/80 focus:bg-white focus:outline-none font-medium"
-              oninput="triggerFilterUpdate()"
-            />
+            <label for="filter-brand">Brand</label>
+            <input type="text" id="filter-brand" placeholder="e.g. Apple, Sony" oninput="triggerFilterUpdate()">
           </div>
-
-          <!-- Price Range -->
           <div class="space-y-2">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Price Range (₹)</label>
+            <span>Price range (₹)</span>
             <div class="grid grid-cols-2 gap-2">
-              <input type="number" id="filter-min-price" placeholder="Min ₹" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium" onchange="triggerFilterUpdate()">
-              <input type="number" id="filter-max-price" placeholder="Max ₹" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium" onchange="triggerFilterUpdate()">
+              <input type="number" id="filter-min-price" inputmode="numeric" aria-label="Minimum price in rupees" placeholder="Min ₹" onchange="triggerFilterUpdate()">
+              <input type="number" id="filter-max-price" inputmode="numeric" aria-label="Maximum price in rupees" placeholder="Max ₹" onchange="triggerFilterUpdate()">
             </div>
           </div>
-
-          <!-- Minimum Rating -->
           <div class="space-y-2">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Minimum Rating</label>
-            <select id="filter-rating" onchange="triggerFilterUpdate()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50/80 focus:bg-white focus:outline-none font-medium">
-              <option value="">Any Rating</option>
-              <option value="4.5">4.5★ & Above</option>
-              <option value="4.0">4.0★ & Above</option>
-              <option value="3.5">3.5★ & Above</option>
+            <label for="filter-rating">Customer rating</label>
+            <select id="filter-rating" onchange="triggerFilterUpdate()">
+              <option value="">Any rating</option>
+              <option value="4.5">4.5★ and above</option>
+              <option value="4.0">4.0★ and above</option>
+              <option value="3.5">3.5★ and above</option>
             </select>
           </div>
-
-          <!-- In-Stock Only Toggle -->
-          <div class="flex items-center justify-between pt-2">
-            <span class="text-xs font-bold text-slate-700">In-Stock Only</span>
-            <input type="checkbox" id="filter-instock" onchange="triggerFilterUpdate()" class="w-4 h-4 text-brand-600 rounded">
+          <div class="catalog-filter-toggle">
+            <label for="filter-instock">In stock only</label>
+            <input type="checkbox" id="filter-instock" onchange="triggerFilterUpdate()">
           </div>
-
-          <!-- Flash-Sale Only Toggle -->
-          <div class="flex items-center justify-between pt-1">
-            <span class="text-xs font-bold text-slate-700">Flash Sale Items</span>
-            <input type="checkbox" id="filter-flashsale" onchange="triggerFilterUpdate()" class="w-4 h-4 text-brand-600 rounded">
+          <div class="catalog-filter-toggle">
+            <label for="filter-flashsale">Flash sale items</label>
+            <input type="checkbox" id="filter-flashsale" onchange="triggerFilterUpdate()">
           </div>
-        </aside>
-
-        <!-- Product Grid & Pagination -->
-        <div class="lg:col-span-3 space-y-6">
-          <div id="shop-product-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-5">
-            <!-- Dynamic products injected here -->
-          </div>
-
-          <!-- Pagination Bar (DL-BUG-006 testing target) -->
-          <div id="pagination-controls" class="flex items-center justify-between border-t border-slate-200/90 pt-6">
-            <button id="prev-page-btn" onclick="changePage(-1)" class="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">
-              Previous
-            </button>
-            <div id="pagination-page-indicator" class="text-sm font-semibold text-slate-700">
-              Page 1 of 5
-            </div>
-            <button id="next-page-btn" onclick="changePage(1)" class="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">
-              Next
-            </button>
-          </div>
+          </aside>
+        </details>
+        <div class="catalog-sort">
+          <label for="sort-select">Sort</label>
+          <select id="sort-select" onchange="triggerFilterUpdate()">
+            <option value="popularity">Popular</option>
+            <option value="price-low">Price: low to high</option>
+            <option value="price-high">Price: high to low</option>
+            <option value="rating">Top rated</option>
+            <option value="newest">New arrivals</option>
+          </select>
         </div>
+      </div>
 
+      <div id="shop-product-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 catalog-product-grid">
+        <!-- Dynamic products injected here -->
+      </div>
+
+      <div id="pagination-controls" class="flex items-center justify-between border-t border-slate-200/90 pt-6">
+        <button id="prev-page-btn" onclick="changePage(-1)" class="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">Previous</button>
+        <div id="pagination-page-indicator" class="text-sm font-semibold text-slate-700">Page 1</div>
+        <button id="next-page-btn" onclick="changePage(1)" class="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">Next</button>
       </div>
     </div>
 
@@ -704,13 +668,45 @@
 
     <!-- ==================== WISHLIST VIEW ==================== -->
     <div id="view-wishlist" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
-      <div class="border-b border-slate-200 pb-4">
-        <h1 class="text-2xl font-black text-slate-900">My Wishlist</h1>
-        <p class="text-xs text-slate-500 font-medium">Saved items you plan to purchase during Mega Festival</p>
+      <div class="wishlist-heading">
+        <div>
+          <p class="wishlist-kicker">A little list of big upgrades</p>
+          <h1 class="text-2xl font-black text-slate-900">My Wishlist</h1>
+          <p class="text-xs text-slate-500 font-medium">Saved items you plan to purchase during Mega Festival</p>
+        </div>
+        <span class="wishlist-heading-mark" aria-hidden="true"><i data-lucide="heart" class="w-7 h-7"></i></span>
       </div>
       <div id="wishlist-product-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Wishlist items injected here -->
       </div>
+      <section id="wishlist-recommendations" class="wishlist-recommendations hidden" aria-labelledby="wishlist-recommendations-title">
+        <div class="wishlist-recommendations-heading">
+          <div>
+            <p class="wishlist-kicker">Picked from the catalog</p>
+            <h2 id="wishlist-recommendations-title">Popular picks to save next</h2>
+          </div>
+          <button type="button" onclick="navigate('shop')">Explore all tech <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+        </div>
+        <div id="wishlist-recommendations-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5"></div>
+      </section>
+    </div>
+
+    <!-- ==================== ABOUT VIEW ==================== -->
+    <div id="view-about" class="hidden max-w-7xl mx-auto px-4 py-10 space-y-8">
+      <section class="about-intro">
+        <div>
+          <span class="about-kicker">About FlashCart</span>
+          <h1>Good tech should be easier to find.</h1>
+          <p>FlashCart brings everyday electronics, useful filters, and limited-time deals together in one place.</p>
+          <button onclick="navigate('shop')" class="about-cta">Explore the catalog <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+        </div>
+        <div class="about-mark" aria-hidden="true"><i data-lucide="shopping-bag" class="w-16 h-16"></i><span>FC</span></div>
+      </section>
+      <section class="about-pillars" aria-label="How FlashCart works">
+        <article><span class="about-icon"><i data-lucide="search" class="w-5 h-5"></i></span><h2>Find your next favorite</h2><p>Browse phones, laptops, cameras, audio, wearables, and more with practical catalog filters.</p></article>
+        <article><span class="about-icon"><i data-lucide="badge-percent" class="w-5 h-5"></i></span><h2>Catch a better price</h2><p>Explore flash-sale picks and apply available coupons from your cart.</p></article>
+        <article><span class="about-icon"><i data-lucide="package-check" class="w-5 h-5"></i></span><h2>Follow every order</h2><p>Review your purchases and delivery details from your customer account.</p></article>
+      </section>
     </div>
 
   </main>
@@ -718,7 +714,7 @@
   <!-- ==================== PRODUCT DETAILS MODAL ==================== -->
   <div id="product-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 shadow-2xl relative p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-150">
-      <button onclick="closeProductModal()" class="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition">
+      <button onclick="closeProductModal()" aria-label="Close product details" class="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
 
@@ -794,7 +790,7 @@
         <i data-lucide="shopping-bag" class="w-5 h-5 text-brand-600"></i>
         <h2 class="font-bold text-slate-900 text-base">Shopping Cart</h2>
       </div>
-      <button onclick="toggleCartDrawer()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition">
+      <button onclick="toggleCartDrawer()" aria-label="Close shopping cart" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -810,6 +806,7 @@
         <input 
           type="text" 
           id="cart-coupon-input" 
+            aria-label="Coupon code"
           placeholder="Enter coupon (e.g. MEGAFEST2026)" 
           class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs uppercase font-mono tracking-wider focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white"
         />
@@ -859,7 +856,7 @@
         <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
           <i data-lucide="lock" class="w-5 h-5 text-emerald-600"></i> Secure Checkout
         </h2>
-        <button onclick="closeCheckoutModal()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100">
+        <button onclick="closeCheckoutModal()" aria-label="Close checkout" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -879,17 +876,17 @@
         <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Select Payment Method</label>
         <div class="grid grid-cols-3 gap-3 text-xs">
           <label class="flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-50 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50 transition shadow-2xs">
-            <input type="radio" name="payment-method" value="UPI" checked class="hidden">
+            <input type="radio" name="payment-method" value="UPI" checked class="sr-only">
             <i data-lucide="smartphone" class="w-5 h-5 text-brand-600"></i>
             <span class="font-bold">UPI / QR</span>
           </label>
           <label class="flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-50 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50 transition shadow-2xs">
-            <input type="radio" name="payment-method" value="CREDIT_CARD" class="hidden">
+            <input type="radio" name="payment-method" value="CREDIT_CARD" class="sr-only">
             <i data-lucide="credit-card" class="w-5 h-5 text-indigo-600"></i>
             <span class="font-bold">Card</span>
           </label>
           <label class="flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-50 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50 transition shadow-2xs">
-            <input type="radio" name="payment-method" value="NET_BANKING" class="hidden">
+            <input type="radio" name="payment-method" value="NET_BANKING" class="sr-only">
             <i data-lucide="landmark" class="w-5 h-5 text-slate-700"></i>
             <span class="font-bold">Net Banking</span>
           </label>
@@ -914,7 +911,7 @@
         >
           <i data-lucide="check-circle" class="w-4 h-4"></i> Place Order & Pay
         </button>
-        <p class="text-center text-[11px] text-slate-400">Testing DL-BUG-001: Try rapidly double-clicking this button to test deduplication locks.</p>
+        <p class="text-center text-[11px] text-slate-400">Your payment will be processed securely.</p>
       </div>
 
     </div>
@@ -968,7 +965,7 @@
       
       <div class="flex items-center justify-between border-b border-slate-100 pb-4">
         <h2 id="auth-modal-title" class="text-xl font-black text-slate-900">Sign in to FlashCart</h2>
-        <button onclick="closeAuthModal()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition">
+        <button onclick="closeAuthModal()" aria-label="Close sign-in dialog" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -976,12 +973,12 @@
       <!-- Login Form -->
       <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
         <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700">Email Address</label>
+          <label for="login-email" class="text-xs font-bold text-slate-700">Email address</label>
           <input type="email" id="login-email" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="name@example.com">
         </div>
         <div class="space-y-1">
           <div class="flex items-center justify-between">
-            <label class="text-xs font-bold text-slate-700">Password</label>
+            <label for="login-password" class="text-xs font-bold text-slate-700">Password</label>
             <a href="#" onclick="showForgotPassword(); return false;" class="text-[11px] text-brand-600 font-bold hover:underline">Forgot?</a>
           </div>
           <input type="password" id="login-password" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="••••••••">
@@ -997,19 +994,19 @@
       <!-- Register Form -->
       <form id="register-form" onsubmit="handleRegisterSubmit(event)" class="space-y-3 hidden">
         <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700">Full Name</label>
+          <label for="reg-name" class="text-xs font-bold text-slate-700">Full name</label>
           <input type="text" id="reg-name" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
         </div>
         <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700">Email Address</label>
+          <label for="reg-email" class="text-xs font-bold text-slate-700">Email address</label>
           <input type="email" id="reg-email" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
         </div>
         <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700">Password</label>
+          <label for="reg-password" class="text-xs font-bold text-slate-700">Password</label>
           <input type="password" id="reg-password" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
         </div>
         <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700">Role</label>
+          <label for="reg-role" class="text-xs font-bold text-slate-700">Account type</label>
           <select id="reg-role" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium">
             <option value="CUSTOMER">Customer / Buyer</option>
             <option value="SELLER">Seller / Merchant</option>
@@ -1027,7 +1024,7 @@
       <form id="forgot-form" onsubmit="handleForgotSubmit(event)" class="space-y-4 hidden">
         <p class="text-xs text-slate-600">Enter your registered email and we'll simulate sending a reset token.</p>
         <div class="space-y-1">
-          <label class="text-xs font-bold text-slate-700">Email Address</label>
+          <label for="forgot-email" class="text-xs font-bold text-slate-700">Email address</label>
           <input type="email" id="forgot-email" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
         </div>
         <button type="submit" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl">
@@ -1039,6 +1036,29 @@
       </form>
 
     </div>
+  </div>
+
+  <div id="app-dialog" class="hidden fixed inset-0 z-[120] grid place-items-center p-4" aria-hidden="true" onclick="handleAppDialogBackdrop(event)" onkeydown="handleAppDialogKeydown(event)">
+    <section class="app-dialog-card" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message" onclick="event.stopPropagation()">
+      <div class="app-dialog-heading">
+        <span id="app-dialog-icon" class="app-dialog-icon"><i data-lucide="circle-help" class="w-5 h-5" aria-hidden="true"></i></span>
+        <button type="button" class="app-dialog-close" onclick="closeAppDialog(false)" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i></button>
+      </div>
+      <h2 id="app-dialog-title">Please confirm</h2>
+      <p id="app-dialog-message"></p>
+      <form id="app-dialog-form" novalidate onsubmit="submitAppDialog(event)">
+        <div id="app-dialog-field" class="app-dialog-field hidden">
+          <label id="app-dialog-label" for="app-dialog-input"></label>
+          <input id="app-dialog-input" type="text">
+          <textarea id="app-dialog-textarea" rows="3" class="hidden"></textarea>
+          <small id="app-dialog-error" class="hidden"></small>
+        </div>
+        <div class="app-dialog-actions">
+          <button id="app-dialog-cancel" type="button" onclick="closeAppDialog(false)">Go back</button>
+          <button id="app-dialog-confirm" type="submit">Confirm</button>
+        </div>
+      </form>
+    </section>
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
