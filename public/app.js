@@ -764,15 +764,18 @@ async function openProductModal(productId) {
     document.getElementById('modal-quantity').textContent = '1';
 
     const stockEl = document.getElementById('modal-product-stock');
-    if (product.stock > 0) {
+    if (product.stock > 10) {
       stockEl.textContent = `In Stock (${product.stock} units available)`;
       stockEl.className = 'font-bold text-emerald-600';
+    } else if (product.stock > 0) {
+      stockEl.textContent = `Hurry, only ${product.stock} left in stock!`;
+      stockEl.className = 'font-bold text-amber-600';
     } else if (product.stock < 0) {
-      stockEl.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-100 text-rose-800 font-extrabold border border-rose-300 text-xs">⚠️ DEFECT: OVERSOLD (${product.stock} Units - Negative Inventory)</span>`;
-      stockEl.className = 'font-bold';
-    } else {
-      stockEl.textContent = 'Out of Stock (0 units)';
+      stockEl.textContent = `Backordered (${product.stock} units)`;
       stockEl.className = 'font-bold text-rose-600';
+    } else {
+      stockEl.textContent = 'Out of Stock';
+      stockEl.className = 'font-bold text-slate-400';
     }
 
     document.getElementById('product-modal').classList.remove('hidden');
@@ -1455,8 +1458,8 @@ async function loadSellerDashboard() {
           </td>
           <td class="py-3 px-4 uppercase text-xs">${p.categorySlug}</td>
           <td class="py-3 px-4 font-bold tabular-nums">₹${p.price.toLocaleString('en-IN')}</td>
-          <td class="py-3 px-4 font-bold ${p.stock < 15 ? 'text-rose-600' : 'text-emerald-600'} tabular-nums">
-            ${p.stock < 0 ? `<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300 font-black">⚠️ OVERSOLD (${p.stock})</span>` : `${p.stock} units`}
+          <td class="py-3 px-4 font-bold ${p.stock < 10 ? 'text-rose-600' : 'text-emerald-600'} tabular-nums">
+            ${p.stock} units
           </td>
           <td class="py-3 px-4 text-right">
             <button onclick="editProductStock('${p.id}', ${p.stock})" class="text-xs font-semibold text-brand-600 hover:underline mr-3">Edit Stock</button>
@@ -1739,57 +1742,3 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
-
-// ==================== BUG-03 VISUAL CONCURRENCY SIMULATOR ====================
-// Call in Browser Console (F12) via: simulateConcurrentCheckouts()
-window.simulateConcurrentCheckouts = async function (productId = 'prod-cam-06') {
-  showToast('Simulating 2 concurrent flash-sale checkouts at the same millisecond...', 'warning');
-  try {
-    // 1. Set product stock to 1 via seller API to simulate last item in flash sale
-    await fetch(`/api/seller/products/${productId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stock: 1 })
-    });
-
-    const payload = {
-      items: [{ productId, quantity: 1 }],
-      addressId: 'addr-demo-1',
-      paymentMethod: 'upi'
-    };
-
-    // 2. Fire 2 checkout requests concurrently with Promise.all
-    const [res1, res2] = await Promise.all([
-      fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, idempotencyKey: 'c1-' + Date.now() })
-      }),
-      fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, idempotencyKey: 'c2-' + Date.now() })
-      })
-    ]);
-
-    const order1 = await res1.json();
-    const order2 = await res2.json();
-
-    // 3. Check resulting inventory in database
-    const verifyRes = await fetch(`/api/products/${productId}`);
-    const verifyData = await verifyRes.json();
-    const finalStock = verifyData.product.stock;
-
-    if (finalStock < 0) {
-      showToast(`⚠️ DL-BUG-003 DETECTED: Stock dropped to ${finalStock} units (Oversold!)`, 'error');
-    } else {
-      showToast(`✓ PROTECTED: Stock safely handled, remaining: ${finalStock} units`, 'success');
-    }
-
-    // Open modal to visually inspect the negative inventory badge on screen
-    openProductModal(productId);
-    return { order1, order2, finalStock };
-  } catch (err) {
-    showToast('Simulation error: ' + err.message, 'error');
-  }
-};

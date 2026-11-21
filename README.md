@@ -23,11 +23,11 @@ Your task: Ensure that asynchronous search responses are tracked by sequence or 
 ### BUG-03: Concurrent Inventory Overselling
 Problem: When multiple customers simultaneously purchase the last remaining stock of a flash-sale item, the backend inventory check and stock decrement occur without atomic concurrency locks, allowing stock levels to drop below zero.
 
-How to identify it: Inspect the flash-sale camera item (Nikon Z8) in the live catalog or open the Seller Dashboard. Observe that concurrent checkouts have driven inventory into a negative balance (`-1 units`) with an `⚠️ DEFECT: OVERSOLD` indicator.
+How to identify it: Send concurrent checkout requests for a product with only 1 unit remaining. Observe that both checkouts succeed, resulting in a negative inventory balance (e.g., -1 stock).
 
 Your task: Use atomic reservation locks or transaction isolation during stock verification and decrement so stock can never be oversold or drop below zero.
 
-![BUG-03: Concurrent Inventory Overselling Defect](docs/images/bug-03-concurrent-overselling.png)
+image
 
 ### BUG-04: Duplicate Payment Transactions
 Problem: When a customer's payment request encounters network delay and they retry the transaction, the payment gateway processes a second charge and records duplicate successful payments for an order that has already been paid.
