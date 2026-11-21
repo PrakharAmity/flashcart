@@ -919,7 +919,10 @@
 
   <!-- ==================== SIMULATED PAYMENT GATEWAY ==================== -->
   <div id="payment-gateway-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-6 text-center">
+    <div class="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-6 text-center relative">
+      <button onclick="document.getElementById('payment-gateway-modal').classList.add('hidden')" aria-label="Close" class="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
       
       <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center">
         <i data-lucide="credit-card" class="w-6 h-6"></i>

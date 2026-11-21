@@ -1011,7 +1011,8 @@ function applyCouponQuick(code) {
 // ==================== CHECKOUT & DL-BUG-001 TESTING ====================
 function openCheckoutModal() {
   if (!state.cart.items || state.cart.items.length === 0) {
-    showToast('Your cart is empty! Add products before checking out.', 'warning');
+    showToast('Your cart is empty! Please add an item before checkout.', 'warning');
+    toggleCartDrawer(true);
     return;
   }
   toggleCartDrawer(false);
@@ -1034,10 +1035,15 @@ async function submitPlaceOrder() {
   const btn = document.getElementById('btn-place-order');
   const isReferenceMode = window.IS_REFERENCE_MODE === true;
 
-  if (isReferenceMode) {
+  if (isReferenceMode && btn) {
     // Reference fix: disable button immediately to prevent rapid multi-clicks
     btn.disabled = true;
     btn.classList.add('opacity-50');
+  }
+
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Placing Order...`;
   }
 
   const selectedMethod = document.querySelector('input[name="payment-method"]:checked')?.value || 'UPI';
@@ -1068,7 +1074,11 @@ async function submitPlaceOrder() {
   } catch (err) {
     showToast('Checkout network request failed', 'error');
   } finally {
-    if (isReferenceMode) {
+    if (btn) {
+      btn.innerHTML = originalHtml;
+      initLucide();
+    }
+    if (isReferenceMode && btn) {
       btn.disabled = false;
       btn.classList.remove('opacity-50');
     }
